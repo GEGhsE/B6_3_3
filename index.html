@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<!--
+  © 2026 GEG 화성(깊이 e끌림). All rights reserved.
+  본 저작물은 「저작권법」에 따라 보호받으며, 저작권자의 허락 없는 복제·배포·수정을 금합니다.
+  문의: bacusiki777@gmail.com, for2102@jimj.kr
+  BUILD: GEGHS-DEEPE-2026
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>👑 우당탕탕 무역왕</title>
+<style>
+  :root {
+    --bg:#0e1a2b; --bg2:#13243c; --panel:#1b2a41; --panel2:#24385a; --line:#34507e;
+    --txt:#eaf1fb; --muted:#9db4d6; --good:#36c275; --bad:#e3585f; --gold:#f5c542; --accent:#4f9cf9;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; }
+  /* 한글 안내가 줄바꿈될 때 단어(어절) 중간에서 잘리지 않도록 */
+  body { word-break:keep-all; overflow-wrap:break-word; }
+  body {
+    font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:radial-gradient(1200px 700px at 50% -8%, #1c3458, var(--bg)) fixed;
+    color:var(--txt); font-size:16px; line-height:1.4;
+  }
+  h1,h2,h3 { margin:0 0 8px; }
+  button { font-family:inherit; cursor:pointer; border:none; border-radius:10px; padding:10px 14px; font-size:15px; font-weight:700; color:#fff; background:var(--accent); transition:filter .1s, transform .05s; touch-action:manipulation; }
+  button:active { transform:scale(.96); }
+  button:disabled { opacity:.35; cursor:not-allowed; }
+  button.ghost { background:var(--panel2); color:var(--txt); }
+  button.good { background:var(--good); }
+  button.sm { padding:8px 12px; font-size:14px; border-radius:9px; }
+
+  header { position:sticky; top:0; z-index:20; background:#16263fee; backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:10px 14px; display:flex; align-items:center; gap:10px; }
+  header .title { font-size:16px; font-weight:800; white-space:nowrap; }
+  header .round { color:var(--muted); font-weight:700; font-size:14px; white-space:nowrap; }
+  .timer { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .timer-lbl { font-size:12px; color:var(--muted); white-space:nowrap; }
+  @media (max-width:620px){ .timer-lbl { display:none; } }
+  .timebar-wrap { width:64px; height:10px; background:var(--panel2); border-radius:6px; overflow:hidden; }
+  .timebar { height:100%; width:100%; background:var(--good); transition:width 1s linear; }
+  #timeLeft { font-weight:800; font-size:14px; min-width:36px; text-align:right; }
+  @media (max-width:480px){ header .title { display:none; } }
+
+  .layout { padding:12px; max-width:1180px; margin:0 auto; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .card h3 { font-size:16px; color:var(--muted); }
+  .arena-wrap { display:flex; align-items:center; justify-content:center; }
+
+  /* 데스크톱: 한 화면에 꽉 차게 — 페이지 스크롤 없음, 보드는 화면 높이에 맞춰 자동 크기 */
+  @media (min-width:980px){
+    html, body { height:100%; overflow:hidden; }
+    #game { height:100vh; height:100dvh; display:flex; flex-direction:column; }
+    .layout { flex:1; min-height:0; display:flex; gap:14px; padding:14px; max-width:1340px; width:100%; }
+    [data-tab="home"]{ flex:0 0 clamp(480px,54vw,780px); height:100%; display:flex; flex-direction:column; gap:10px; overflow:hidden; }
+    .right-col { max-width:420px; }
+    [data-tab="home"] .card { margin-bottom:0; }
+    .board-card { flex:1; min-height:0; display:flex; flex-direction:column; }
+    .board-card .arena-wrap { flex:1; min-height:0; }
+    .board-card .arena { width:100%; height:100%; max-width:none; aspect-ratio:auto; margin:0; }
+    .right-col { flex:1; min-height:0; height:100%; overflow:hidden; display:flex; flex-direction:column; }
+    .right-col .card:last-child { margin-bottom:0; }
+    .right-col [data-tab="make"] { flex:1; min-height:0; display:flex; }
+    .right-col [data-tab="make"] .card { flex:1; min-height:0; overflow-y:auto; }
+  }
+
+  /* ===== 내 자원 HUD (가장 크게) ===== */
+  .hud { background:linear-gradient(135deg,#27518a,#1b2a41); padding:11px 12px; }
+  .hud-top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .hud-flag { font-size:30px; }
+  .hud-name { font-size:18px; font-weight:800; }
+  .hud-money { margin-left:auto; text-align:right; display:flex; align-items:baseline; gap:6px; }
+  .hud-money .lbl { font-size:12px; color:var(--muted); }
+  .hud-money .val { font-size:22px; font-weight:900; color:var(--gold); line-height:1; }
+  .hud-res { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .hud-cell { background:var(--bg2); border:1px solid var(--line); border-radius:11px; padding:5px 3px; text-align:center; position:relative; transition:transform .15s; }
+  .hud-cell .ic { font-size:clamp(18px,4.6vw,24px); line-height:1; }
+  .hud-cell .ct { font-size:clamp(16px,4vw,21px); font-weight:900; color:var(--gold); }
+  .hud-cell .nm { font-size:10px; color:var(--muted); }
+  .hud-cell.spec { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+  .hud-cell.spec::after { content:'⭐'; position:absolute; top:-7px; right:-5px; font-size:12px; }
+  .hud-cell.bump { transform:scale(1.18); }
+  .hud-prod { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; align-items:center; }
+  .hud-prod .lbl { font-size:12px; color:var(--muted); }
+  .prod-badge { display:inline-flex; align-items:center; gap:4px; font-size:19px; background:#2c4368; border:1px solid var(--line); border-radius:10px; padding:3px 8px; }
+  .prod-badge .rc { font-size:14px; font-weight:800; color:var(--gold); }
+
+  /* ===== 세계 보드 (원형 아레나) ===== */
+  .arena { position:relative; width:100%; max-width:520px; aspect-ratio:1/1; margin:0 auto; }
+  .arena-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .arena-lines line { stroke:var(--line); stroke-width:.4; stroke-dasharray:1.6 1.6; opacity:.7; }
+  /* 카드 크기·글자는 보드 크기(--as)에 비례해서 함께 커짐 */
+  .arena { --as:360px; }
+  .me-pod { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:calc(var(--as)*.28); background:linear-gradient(135deg,#3a6fb5,#274a7d); border:2px solid var(--accent); border-radius:calc(var(--as)*.035); padding:calc(var(--as)*.02); text-align:center; z-index:3; box-shadow:0 6px 18px rgba(0,0,0,.4); cursor:pointer; }
+  .me-pod .mp-flag { font-size:calc(var(--as)*.088); line-height:1; }
+  .me-pod .mp-name { font-weight:800; font-size:calc(var(--as)*.036); margin-top:3px; }
+  .me-pod .mp-tag { font-size:calc(var(--as)*.024); background:#fff; color:var(--accent); border-radius:6px; padding:1px 6px; font-weight:800; }
+  .me-pod .mp-money { font-size:calc(var(--as)*.046); font-weight:900; color:var(--gold); margin-top:4px; }
+  .me-pod .mp-hint { font-size:calc(var(--as)*.026); color:#cfe0fb; margin-top:3px; }
+
+  .ring-node { position:absolute; transform:translate(-50%,-50%); width:calc(var(--as)*.28); background:var(--bg2); border:1px solid var(--line); border-radius:calc(var(--as)*.028); padding:calc(var(--as)*.016) calc(var(--as)*.012); text-align:center; z-index:2; cursor:pointer; transition:box-shadow .15s; }
+  .ring-node:active { transform:translate(-50%,-50%) scale(.95); }
+  .ring-node.win { box-shadow:0 0 12px var(--gold); border-color:var(--gold); }
+  .ring-node.market { background:linear-gradient(135deg,#5a3aa0,#2b2140); border:2px dashed #b39ce8; }
+  .ring-node.market .rn-name { color:#e7dcff; }
+  .rn-flag { font-size:calc(var(--as)*.066); line-height:1; }
+  .rn-name { font-size:calc(var(--as)*.034); font-weight:800; }
+  .rn-money { font-size:calc(var(--as)*.034); font-weight:800; color:var(--gold); }
+  .rn-res { display:flex; justify-content:center; gap:calc(var(--as)*.006); flex-wrap:nowrap; margin-top:calc(var(--as)*.012); }
+  .rn-res .u { font-size:calc(var(--as)*.031); display:inline-flex; align-items:center; white-space:nowrap; }
+  .rn-res .u b { color:var(--gold); font-weight:800; margin-left:1px; }
+  .rn-res .u.spec { text-shadow:0 0 6px var(--gold); }
+  .rn-cta { font-size:calc(var(--as)*.024); color:#a9bbd8; margin-top:3px; }
+  .pulse-pod { animation:pp .5s; }
+  @keyframes pp { 0%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.12);} 100%{transform:translate(-50%,-50%) scale(1);} }
+  .board-legend { text-align:center; font-size:13px; color:var(--muted); padding:2px 0; flex:none; }
+  .board-legend b { color:#cfe0fb; }
+  /* 다른 나라들의 거래가 흐르는 피드 */
+  .trade-feed { flex:none; min-height:24px; max-height:46px; overflow:hidden; text-align:center; font-size:12.5px; color:#a9bbd8; line-height:1.7; }
+  .trade-feed .tf { animation:tfin .35s; }
+  @keyframes tfin { from{ opacity:0; transform:translateY(-4px);} to{ opacity:1; transform:none;} }
+  .trade-feed .tf b { color:#cfe0fb; }
+  .offer-line { background:rgba(245,197,66,.12); border-left:4px solid var(--gold); border-radius:0 10px 10px 0; padding:12px 14px; margin:10px 0; font-size:1.06em; }
+  .offer-line .big { font-size:1.15em; font-weight:900; }
+
+  /* ===== 제작소 ===== */
+  .product { border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:var(--panel2); padding:12px; display:flex; align-items:center; gap:12px; }
+  .product.can { border-color:var(--good); box-shadow:0 0 0 1px var(--good) inset; }
+  .product.locked { opacity:.7; }
+  .recipe-visual { flex:1; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ing { display:inline-flex; align-items:center; gap:3px; font-size:20px; padding:4px 8px; border-radius:10px; background:var(--bg2); border:1px solid var(--line); }
+  .ing.ok { border-color:var(--good); } .ing.no { border-color:var(--bad); }
+  .ing small { font-size:11px; font-weight:700; } .ing.ok small { color:var(--good); } .ing.no small { color:var(--bad); }
+  .arrow { font-size:20px; color:var(--muted); }
+  .result-pill { display:inline-flex; align-items:center; gap:5px; font-size:22px; font-weight:800; background:#2c4368; border-radius:10px; padding:5px 10px; }
+  .result-pill .price { font-size:12px; color:var(--gold); font-weight:800; }
+
+  /* ===== 시장 ===== */
+  .mkt-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; background:var(--panel2); }
+  .mkt-ic { font-size:24px; } .mkt-name { font-weight:800; } .mkt-meta { color:var(--muted); font-size:13px; } .mkt-have { color:var(--gold); font-weight:800; }
+  .mkt-actions { margin-left:auto; display:flex; gap:6px; }
+
+  /* ===== 협상 ===== */
+  .neg-target { display:flex; align-items:center; gap:10px; width:100%; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); color:var(--txt); font-weight:700; margin-bottom:8px; justify-content:flex-start; }
+  .neg-target .flag { font-size:24px; } .neg-target .mini { margin-left:auto; font-size:13px; color:var(--muted); }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:flex-end; justify-content:center; z-index:85; }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--line); border-radius:18px 18px 0 0; padding:18px; width:100%; max-width:760px; max-height:92vh; overflow-y:auto; overflow-x:hidden; padding-bottom:calc(18px + var(--safe-bottom)); }
+  @media (min-width:600px){ .modal-bg { align-items:center; } .modal { border-radius:18px; } }
+  .trade-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+  @media (min-width:560px){ .trade-grid { grid-template-columns:1fr 1fr; } }
+  .trade-box { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .trade-box.give { border-color:var(--good); } .trade-box.get { border-color:var(--accent); }
+  .stepper { display:flex; align-items:center; justify-content:space-between; padding:7px 0; gap:8px; }
+  .stepper .lbl { font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+  .stepper .lbl .note { font-size:11px; }
+  .stepper .ctrl { display:flex; align-items:center; gap:8px; flex:none; } .stepper .val { min-width:24px; text-align:center; font-weight:800; color:var(--gold); }
+  .rnd-btn { width:38px; height:38px; border-radius:9px; padding:0; font-size:20px; background:var(--panel); border:1px solid var(--line); }
+  .rnd-btn.mny { width:auto; min-width:36px; padding:0 8px; font-size:13px; font-weight:800; }
+  .stepper.money .ctrl { gap:5px; }
+  .neg-value { display:flex; justify-content:space-between; margin-top:10px; font-weight:700; font-size:13px; color:var(--muted); }
+  .neg-result { margin-top:14px; padding:12px; border-radius:12px; font-weight:700; display:none; }
+  .neg-result.show { display:block; }
+  .neg-result.bad { background:rgba(227,88,95,.18); border:1px solid var(--bad); color:#ffd4d6; }
+  .neg-result.good { background:rgba(54,194,117,.18); border:1px solid var(--good); color:#c9f6dd; }
+  .guide-body p { margin:0 0 12px; line-height:1.65; font-size:15px; }
+  .guide-body b { color:#cfe0fb; }
+
+  /* ===== 탭바 ===== */
+  .tabbar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:30; background:#16263f; border-top:1px solid var(--line); padding-bottom:var(--safe-bottom); }
+  .tabbar button { flex:1; background:none; border:none; border-radius:0; color:var(--muted); font-size:11px; font-weight:700; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 2px; }
+  .tabbar button .ic { font-size:21px; } .tabbar button.active { color:var(--accent); }
+  @media (max-width:979px){ .layout { padding-bottom:84px; } .tab-section { display:none; } .tab-section.active { display:block; } .tabbar { display:flex; } }
+
+  /* ===== 시작/종료 ===== */
+  .overlay { position:fixed; inset:0; background:radial-gradient(1200px 700px at 50% -8%, #1c3458, var(--bg)); z-index:60; display:flex; align-items:flex-start; justify-content:center; padding:20px 16px; overflow-y:auto; }
+  .overlay .box { max-width:700px; width:100%; text-align:center; margin:auto 0; }
+  .country-pick { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:18px 0; }
+  @media (min-width:560px){ .country-pick { grid-template-columns:repeat(3,1fr); } }
+  .pick { background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:14px; cursor:pointer; transition:border-color .1s, transform .1s; }
+  .pick:active { border-color:var(--accent); transform:scale(.98); }
+  .pick .pf { font-size:40px; } .pick .pn { font-weight:800; margin-top:4px; } .pick .pbig { font-size:13px; color:var(--gold); margin-top:4px; font-weight:700; } .pick .pd { font-size:12px; color:var(--muted); margin-top:4px; }
+  .hide { display:none !important; }
+  .rank-row { display:flex; gap:10px; align-items:center; padding:10px 12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+  .rank-row .pos { font-weight:800; width:30px; font-size:18px; }
+  .pulse { animation:pulse .4s; } @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.14);} 100%{transform:scale(1);} }
+  .note { color:var(--muted); font-size:14px; line-height:1.6; }
+
+  /* ===== 토스트 & 이동 아이콘 ===== */
+  #toast { position:fixed; left:50%; top:62px; transform:translateX(-50%) translateY(-20px); z-index:95; max-width:92vw; padding:14px 20px; border-radius:14px; font-weight:800; font-size:16px; color:#fff; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #toast.good { background:var(--good); } #toast.bad { background:var(--bad); } #toast.info { background:var(--accent); }
+  .fly { position:fixed; font-size:34px; z-index:90; pointer-events:none; transition:transform .9s cubic-bezier(.45,0,.25,1), opacity .9s; transform:translate(0,0) scale(1); filter:drop-shadow(0 4px 6px rgba(0,0,0,.55)); }
+
+  /* ===== 수업 연결 ===== */
+  .conn-banner { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:11px 13px; font-size:14px; color:var(--txt); margin:10px 0 4px; line-height:1.55; text-align:center; }
+  .conn-banner.ok { border-color:var(--good); background:rgba(54,194,117,.12); }
+  .conn-banner.warn { border-color:var(--bad); background:rgba(227,88,95,.12); }
+  .conn-banner .link { display:inline; background:none; border:none; color:var(--accent); font-weight:800; padding:0 2px; font-size:14px; text-decoration:underline; width:auto; }
+  .name-pick { width:100%; padding:12px; border-radius:12px; background:var(--panel); color:var(--txt); border:1px solid var(--accent); font-size:16px; font-family:inherit; font-weight:700; margin-bottom:8px; }
+  .set-field { width:100%; padding:12px; border-radius:12px; background:var(--bg2); color:var(--txt); border:1px solid var(--line); font-size:15px; font-family:inherit; margin:6px 0; }
+  .set-status { min-height:20px; font-size:14px; font-weight:700; margin-top:6px; color:var(--muted); }
+  .set-status.ok { color:var(--good); } .set-status.warn { color:var(--bad); }
+  .set-steps { font-size:13px; color:var(--muted); line-height:1.6; background:var(--bg2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:12px; }
+  .set-steps b { color:#cfe0fb; }
+
+  /* ===== 학습 온보딩 · 퀴즈 (글씨 1.3배) ===== */
+  .big { font-size:1.3em; }
+  .onb-card { max-width:640px; width:100%; background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; margin:auto 0; }
+  .onb-dots { display:flex; gap:6px; justify-content:center; margin:4px 0 14px; flex-wrap:wrap; }
+  .onb-dot { width:9px; height:9px; border-radius:50%; background:var(--panel2); border:1px solid var(--line); }
+  .onb-dot.on { background:var(--accent); border-color:var(--accent); }
+  .onb-icon { font-size:54px; text-align:center; }
+  .onb-h { font-size:1.5em; font-weight:900; text-align:center; margin:6px 0 4px; color:#eaf1fb; }
+  .onb-body { font-size:1.18em; line-height:1.7; color:var(--txt); }
+  .onb-body b { color:var(--gold); }
+  /* 예시는 입력칸처럼 보이지 않게 — 왼쪽 강조선 + 은은한 하이라이트 */
+  .onb-eg { background:rgba(79,156,249,.12); border:none; border-left:4px solid var(--accent); border-radius:0 10px 10px 0; padding:10px 14px; margin-top:14px; font-size:1.02em; color:#cfe0fb; }
+  .onb-eg::before { content:'💡 예시'; display:block; font-size:.78em; font-weight:900; color:var(--accent); margin-bottom:3px; letter-spacing:.5px; }
+  .onb-nav { display:flex; gap:10px; margin-top:18px; }
+  .onb-nav button { flex:1; }
+  .quiz-q { background:var(--bg2); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; font-size:1.16em; line-height:1.8; }
+  .quiz-q.ok { border-color:var(--good); box-shadow:0 0 0 1px var(--good) inset; }
+  .quiz-q.no { border-color:var(--bad); animation:shake .35s; }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+  .blank { display:inline-block; min-width:84px; padding:3px 10px; margin:0 3px; border-bottom:3px solid var(--accent); background:#1d3354; border-radius:8px 8px 0 0; color:var(--gold); font-weight:900; text-align:center; cursor:pointer; vertical-align:middle; }
+  .blank.empty { color:var(--muted); border-bottom-color:var(--line); }
+  .blank.sel { box-shadow:0 0 0 2px var(--accent); }
+  .word-bank { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0; }
+  .word { background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:1.1em; font-weight:800; color:var(--txt); cursor:pointer; }
+  .word.used { opacity:.3; pointer-events:none; }
+  .quiz-fb { text-align:center; font-weight:800; min-height:24px; margin-top:6px; }
+
+  /* ===== 팀 편성 화면 ===== */
+  .team-line { display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; text-align:left; }
+  .team-line .tflag { font-size:26px; } .team-line .tname { font-weight:800; flex:1; } .team-line .ttag { font-size:12px; font-weight:800; border-radius:8px; padding:2px 8px; }
+  .ttag.me { background:var(--accent); color:#fff; } .ttag.mate { background:#2c4368; color:#cfe0fb; } .ttag.cpu { background:var(--panel); color:var(--muted); border:1px solid var(--line); }
+
+  /* ===== 나라 현황(시장 안) ===== */
+  .nation-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; background:var(--panel2); }
+  .nation-row.lead { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+  .nation-row .nf { font-size:24px; } .nation-row .nn { font-weight:800; }
+  .nation-row .nplayer { font-size:12px; color:var(--accent); font-weight:800; }
+  .nation-row .nmoney { color:var(--gold); font-weight:800; } .nation-row .nres { color:var(--muted); font-size:13px; }
+  .nation-row .nact { margin-left:auto; }
+
+  /* ===== 협상(태도/관계) ===== */
+  .mood-wrap { display:flex; align-items:center; gap:8px; margin:4px 0 10px; font-size:14px; color:var(--muted); }
+  .mood-bar { flex:1; height:12px; background:var(--panel2); border-radius:7px; overflow:hidden; border:1px solid var(--line); }
+  .mood-fill { height:100%; width:50%; background:linear-gradient(90deg,#e3585f,#f5c542,#36c275); transition:width .4s; }
+  .strat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:6px; }
+  /* 협상창: 왼쪽=주고받기, 오른쪽=태도 한 줄(세로) */
+  #negModal .modal { max-width:940px; }   /* 협상창은 더 넓게 — 태도 칸과 목록이 겹치지 않게 */
+  .neg-main { display:flex; gap:16px; align-items:flex-start; margin-top:10px; }
+  .neg-left { flex:1; min-width:0; }
+  .strat-col { flex:0 0 180px; display:flex; flex-direction:column; gap:8px; }
+  .strat-col .strat { width:100%; }
+  @media (max-width:760px){ .neg-main { flex-direction:column; } .strat-col { flex:0 0 auto; width:100%; } }
+  .strat { padding:11px 10px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); color:var(--txt); font-weight:800; font-size:14px; text-align:center; line-height:1.35; }
+  .strat small { display:block; font-weight:600; color:var(--muted); font-size:11px; margin-top:2px; }
+  .strat.s1 { border-color:var(--accent); } .strat.s2 { border-color:#b39ce8; } .strat.s3 { border-color:var(--gold); } .strat.s4 { border-color:var(--bad); }
+  .neg-react { margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--bg2); border:1px solid var(--line); font-size:15px; line-height:1.55; min-height:20px; }
+  .neg-react .who { font-weight:800; color:#cfe0fb; }
+  .neg-react.good { border-color:var(--good); } .neg-react.bad { border-color:var(--bad); } .neg-react.mid { border-color:var(--gold); }
+
+  /* ===== 라운드 요약 ===== */
+  .sum-row { display:grid; grid-template-columns:30px 1fr auto auto; gap:8px; align-items:center; padding:9px 10px; border:1px solid var(--line); border-radius:11px; margin-bottom:7px; background:var(--panel2); }
+  .sum-row.king { border-color:var(--gold); box-shadow:0 0 14px rgba(245,197,66,.35); }
+  .sum-row.me { outline:2px solid var(--accent); }
+  .sum-flag { font-size:22px; } .sum-name { font-weight:800; } .sum-name small{ color:var(--accent); font-weight:800; }
+  .sum-score { font-weight:900; color:var(--gold); }
+  .delta { font-weight:900; font-size:14px; padding:2px 8px; border-radius:8px; }
+  .delta.up { color:#bff3d6; background:rgba(54,194,117,.22); } .delta.down { color:#ffd3d5; background:rgba(227,88,95,.22); } .delta.flat{ color:var(--muted); }
+  .pop { animation:pop .5s; } @keyframes pop { 0%{transform:scale(.6);opacity:0;} 60%{transform:scale(1.12);} 100%{transform:scale(1);opacity:1;} }
+
+  /* ===== 결과 / 무역왕 ===== */
+  #fireworks { position:fixed; inset:0; z-index:70; pointer-events:none; display:none; }
+  .king-card { background:radial-gradient(circle at 50% 0%, #3a2c08, var(--panel)); border:2px solid var(--gold); border-radius:20px; padding:22px; text-align:center; box-shadow:0 0 40px rgba(245,197,66,.4); }
+  .king-trophy { font-size:64px; } .king-title { font-size:1.6em; font-weight:900; color:var(--gold); margin:6px 0; }
+  .advice { background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:14px 16px; text-align:left; margin:14px 0; font-size:15px; line-height:1.7; }
+  .advice h4 { margin:0 0 8px; color:#cfe0fb; }
+  .advice .tip { display:flex; gap:8px; margin:7px 0; } .advice .tip span:first-child{ flex:none; }
+  .ledger { display:flex; gap:10px; justify-content:center; margin:10px 0; }
+  .ledger div { flex:1; background:var(--bg2); border:1px solid var(--line); border-radius:12px; padding:10px; }
+  .ledger .lv { font-size:1.4em; font-weight:900; }
+  .ledger .inc .lv{ color:var(--good);} .ledger .exp .lv{ color:var(--bad);} .ledger .net .lv{ color:var(--gold);} 
+
+  /* ===== 입장 카드 (이름 선택) ===== */
+  .enter-card { position:relative; max-width:440px; width:100%; margin:auto 0; background:#ededf0; color:#23262e; border-radius:26px; padding:36px 30px 30px; box-shadow:0 20px 55px rgba(0,0,0,.5); text-align:center; }
+  .enter-title { font-size:38px; font-weight:900; color:#22252d; letter-spacing:-1px; line-height:1.1; }
+  .enter-sub { color:#6b7280; font-size:16px; margin:12px 0 22px; }
+  .enter-select { width:100%; padding:16px 18px; border-radius:16px; border:2px solid #d7d9e0; background:#fff; color:#23262e; font-size:18px; font-weight:700; font-family:inherit; cursor:pointer; }
+  .enter-select:disabled { background:#f0f0f2; color:#9aa0ab; cursor:not-allowed; }
+  .enter-hint { min-height:20px; font-size:14px; font-weight:800; color:#7c6df2; margin:12px 0 4px; }
+  .enter-btn { width:100%; margin-top:8px; padding:17px; border-radius:16px; border:none; background:#7c6df2; color:#fff; font-size:19px; font-weight:900; cursor:pointer; font-family:inherit; }
+  .enter-btn:hover:not(:disabled) { background:#6a5ae0; }
+  .enter-btn:disabled { opacity:.45; cursor:not-allowed; }
+  .teacher-link { display:block; margin:12px auto 0; background:none; border:none; color:#8b90a0; font-size:13px; font-weight:800; cursor:pointer; width:auto; padding:7px 10px; border-radius:8px; }
+  .teacher-link:hover { background:#e0e0e4; color:#5a5f6e; }
+  .enter-conn { margin-top:14px; font-size:13px; font-weight:700; min-height:18px; color:#6b7280; }
+</style>
+</head>
+<body>
+
+<!-- 시작 (입장: 이름 선택) -->
+<div id="startScreen" class="overlay">
+  <div class="enter-card">
+    <div class="enter-title">👑 우당탕탕 무역왕</div>
+    <p class="enter-sub">여러분의 이름을 선택하고 무역을 시작해요!</p>
+    <select id="namePick" class="enter-select" onchange="onNamePick(this.value)">
+      <option value="">선택하세요</option>
+    </select>
+    <div id="nameHint" class="enter-hint"></div>
+    <button id="enterBtn" class="enter-btn" onclick="enterGame()" disabled>시작하기!</button>
+    <button class="teacher-link" onclick="openSettings()">⚙️ 선생님 메뉴</button>
+    <div id="connBanner" class="enter-conn"></div>
+  </div>
+</div>
+
+<!-- 학습 온보딩 + 확인 문제 -->
+<div id="onboardScreen" class="overlay hide">
+  <div class="onb-card">
+    <div class="onb-dots" id="onbDots"></div>
+    <div id="onbStage"></div>
+    <div class="onb-nav" id="onbNav"></div>
+  </div>
+</div>
+
+<!-- 나라 선택 / 팀 편성 -->
+<div id="countryScreen" class="overlay hide">
+  <div class="box">
+    <h1 id="csTitle">🌍 맡을 나라 고르기</h1>
+    <p class="note big" id="csDesc">나라마다 잘 만드는 것이 달라요. 하나를 골라 무역왕에 도전하세요!</p>
+    <div id="teamLineup"></div>
+    <div id="countryPick" class="country-pick"></div>
+    <p class="note" id="csFoot">선택한 나라는 여러분이, 나머지 나라는 컴퓨터가 운영합니다.</p>
+  </div>
+</div>
+
+<!-- 종료 -->
+<div id="endScreen" class="overlay hide">
+  <div class="box" id="endBox"></div>
+</div>
+<canvas id="fireworks"></canvas>
+
+<!-- 게임 -->
+<div id="game" class="hide">
+  <header>
+    <span class="title">👑 우당탕탕 무역왕</span>
+    <span class="round">라운드 <b id="roundNow">1</b>/<span id="roundMax">10</span></span>
+    <div class="timer">
+      <span class="timer-lbl">🔄 이번 라운드 거래</span>
+      <span id="timeLeft">--</span>
+      <div class="timebar-wrap"><div id="timebar" class="timebar"></div></div>
+      <button class="sm ghost" onclick="endRound()">다음</button>
+      <button class="sm ghost" onclick="openGuide()" title="도움말" aria-label="도움말">❓</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- 🌍 보드 (내 자원 HUD + 원형 보드) -->
+    <section class="tab-section active" data-tab="home">
+      <div class="card hud">
+        <div class="hud-top">
+          <span class="hud-flag" id="hudFlag">🏜️</span>
+          <span class="hud-name" id="hudName">석유국</span>
+          <span class="hud-money"><span class="lbl">내 돈 💰</span><span class="val" id="hudMoney">0</span></span>
+        </div>
+        <div class="hud-res" id="hudRes"></div>
+        <div class="hud-prod"><span class="lbl">내 제품:</span><span id="hudProd"></span></div>
+      </div>
+      <div class="board-legend">
+        <span>👆 <b>🏪 세계 시장</b>에서 사고팔기 · <b>나라</b>를 눌러 협상 · 라운드마다 거래 횟수가 늘어요 (이번 라운드: <b id="roundReq">1</b>번씩)</span>
+      </div>
+      <div id="tradeFeed" class="trade-feed"></div>
+      <div class="card board-card">
+        <div class="arena-wrap"><div class="arena" id="arena"></div></div>
+      </div>
+    </section>
+
+    <div class="right-col">
+    <!-- 🛠 제작 -->
+    <section class="tab-section" data-tab="make">
+      <div class="card"><h3>🛠️ 제작소 — 자원을 모아 제품 만들기</h3><div id="workshop"></div></div>
+    </section>
+    </div><!-- /right-col -->
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="active" data-go="home"><span class="ic">🌍</span>보드</button>
+    <button data-go="make"><span class="ic">🛠️</span>제작</button>
+    <button data-go="market"><span class="ic">🏪</span>시장</button>
+  </nav>
+</div>
+
+<!-- 가이드는 학습 온보딩(복습 모드)으로 대체됨 -->
+
+<!-- 시장 모달 -->
+<div id="mktModal" class="modal-bg">
+  <div class="modal">
+    <h2>🏪 세계 시장</h2>
+    <div class="note" style="margin-top:4px">🌍 나라 현황 — 다른 나라와 직접 <b>협상</b>할 수 있어요</div>
+    <div id="mktNations"></div>
+    <div class="note" style="margin-top:12px">자원 — 정해진 가격으로 사고팔기</div><div id="mktResources"></div>
+    <div class="note" style="margin-top:10px">제품 — 정해진 가격으로 사고팔기</div><div id="mktProducts"></div>
+    <button class="ghost" style="width:100%;margin-top:14px" onclick="closeMarket()">닫기</button>
+  </div>
+</div>
+
+<!-- 협상 모달 -->
+<div id="negModal" class="modal-bg">
+  <div class="modal">
+    <h2 id="negTitle">🤝 협상</h2>
+    <p class="note" id="negHint"></p>
+    <div class="mood-wrap">
+      <span>관계 😊</span>
+      <div class="mood-bar"><div class="mood-fill" id="moodFill"></div></div>
+      <span id="moodTxt">보통</span>
+    </div>
+    <div class="neg-main">
+      <div class="neg-left">
+        <div class="trade-grid">
+          <div class="trade-box give"><h3 style="color:var(--good)">➡️ 내가 줄 것</h3><div id="giveList"></div></div>
+          <div class="trade-box get"><h3 style="color:var(--accent)">⬅️ 내가 받을 것</h3><div id="getList"></div></div>
+        </div>
+        <div class="neg-value"><span>주는 가치: <b id="giveVal" style="color:var(--good)">0</b></span><span>받는 가치: <b id="getVal" style="color:var(--accent)">0</b></span></div>
+      </div>
+      <div class="strat-col">
+        <div class="note" style="text-align:center">어떤 태도로<br>제안할까요?</div>
+        <button class="strat s1" onclick="negotiate('정중')">🙂 정중히 제안<small>사이가 좋을수록 더 깎아 줘요</small></button>
+        <button class="strat s2" onclick="negotiate('설득')">🗣️ 설득하기<small>이유를 들어 조금 더 깎아 줘요</small></button>
+        <button class="strat s3" onclick="negotiate('조르기')">🙏 조르기<small>조를수록 깎이지만 사이가 상해요</small></button>
+        <button class="strat s4" onclick="negotiate('떼쓰기')">😤 떼쓰기<small>크게 깎을 수도, 크게 틀어질 수도</small></button>
+      </div>
+    </div>
+    <div id="negReact" class="neg-react">상대가 기다리고 있어요. 주고받을 것을 정하고 태도를 골라 보세요.</div>
+    <div style="display:flex; gap:10px; margin-top:14px;">
+      <button class="ghost" style="flex:1" onclick="closeNeg()">그만하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 들어온 협상 제안 모달 -->
+<div id="offerModal" class="modal-bg">
+  <div class="modal" style="max-width:460px;text-align:center">
+    <div style="font-size:44px">📨</div>
+    <h2 id="offerTitle">협상 제안이 왔어요!</h2>
+    <div id="offerBody" class="offer-line" style="text-align:left"></div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="good" style="flex:1" onclick="acceptOffer()">수락하기</button>
+      <button class="strat s2" style="flex:1" onclick="counterOffer()">🤝 협상하기<small>수량·태도를 바꿔 되제안</small></button>
+      <button class="ghost" style="flex:1" onclick="declineOffer()">거절하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 라운드 요약 모달 -->
+<div id="roundModal" class="modal-bg">
+  <div class="modal">
+    <h2 id="roundSumTitle">📊 라운드 결과</h2>
+    <p class="note" id="roundSumHint">이번 라운드 동안 각 나라의 점수가 이렇게 변했어요. (점수 = 돈 + 자원·제품의 가치)</p>
+    <div id="roundSumList"></div>
+    <button class="good" style="width:100%;margin-top:14px" id="roundSumBtn" onclick="afterSummary()">다음 라운드 ▶</button>
+  </div>
+</div>
+
+<!-- 계속 묻기 모달 -->
+<div id="contModal" class="modal-bg">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:48px">🤔</div>
+    <h2 id="contTitle">5라운드 끝!</h2>
+    <p class="note big" id="contMsg">여기까지 해도 좋고, 더 이어가도 좋아요. 어떻게 할까요?</p>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="good" style="flex:1; font-size:16px" onclick="continueMore()">🔥 더 하기</button>
+      <button class="ghost" style="flex:1; font-size:16px" onclick="stopNow()">🏁 그만하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⚙️ 수업 연결 모달 -->
+<div id="setModal" class="modal-bg">
+  <div class="modal">
+    <h2>⚙️ 선생님 메뉴</h2>
+    <p class="note" id="setNoteConnect">선생님이 만든 구글 시트를 <b>웹 앱으로 배포</b>해 나온 <b>주소(.../exec)</b>를 붙여넣고 [연결하기]를 누르세요. 그러면 학생들이 명단에서 이름을 골라 입장할 수 있어요.</p>
+    <p class="note" id="setNoteAppsScript" style="display:none">이 앱은 이미 <b>선생님 시트에 연결</b>되어 있어요. 학생에게는 아래 <b>주소를 그대로 공유</b>하세요. 명단·팀은 시트의 <b>[학생 명단]</b> 탭에서 정합니다.</p>
+    <input id="setEndpoint" class="set-field" type="text" inputmode="url" autocomplete="off" placeholder="여기에 주소(.../exec)를 붙여넣으세요" />
+    <div id="setStatus" class="set-status"></div>
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <button id="btnConnect" class="good" style="flex:1" onclick="saveConnection()">연결하기</button>
+      <button class="ghost" style="flex:1" onclick="closeSettings()">닫기</button>
+    </div>
+    <button id="btnDisconnect" class="ghost sm" style="width:100%; margin-top:8px" onclick="disconnectConnection()">연결 끊기</button>
+    <div id="shareWrap" class="hide" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line)">
+      <div class="note" style="margin-bottom:6px"><b>학생 공유 주소</b> — 이 주소를 학생에게 주면, 학생은 ⚙️ 없이도 우리 반에 자동으로 연결돼요.</div>
+      <input id="shareLink" class="set-field" readonly onclick="this.select()" />
+      <button class="good sm" style="width:100%; margin-top:8px" onclick="copyShareLink()">📋 학생 링크 복사</button>
+    </div>
+    <div class="set-steps">
+      <b>선생님용 안내</b><br/>
+      나눠드린 <b>구글 시트</b> 사본을 열고, 위 메뉴 <b>🌍 교실 무역 게임 → 시트 처음 설정하기</b>를 누르면 준비가 끝나요. 연결 주소를 만드는 자세한 순서는 시트의 <b>‘사용 설명’</b> 탭에 있습니다.
+    </div>
+  </div>
+</div>
+
+<!-- ❓ 게임 방법 (게임 중 ? 버튼) -->
+<div id="helpModal" class="modal-bg">
+  <div class="modal" style="max-width:520px">
+    <h2>❓ 게임 방법</h2>
+    <div class="guide-body" style="text-align:left">
+      <p>🏪 <b>세계 시장</b>에서 자원과 제품을 <b>사고팔아요.</b></p>
+      <p>🤝 <b>나라</b>를 눌러 <b>협상</b>해요. 태도(정중·설득·조르기·떼쓰기)와 사이가 좋을수록 <b>시장보다 싸게</b> 얻을 수 있어요.</p>
+      <p>🏭 자원을 모아 <b>제품</b>을 만들면 값이 올라가요. <b>싸게 사서 → 만들어 → 비싸게!</b></p>
+      <p>🔄 <b>라운드마다 거래 횟수가 늘어요.</b><br>1라운드 <b>1번</b>, 2라운드 <b>2번</b>, 3라운드 <b>3번</b>, 4라운드 <b>4번</b>, 5라운드 <b>5번</b>… <b>5라운드부터는 계속 5번</b>씩 거래하면 그 라운드가 끝나요. (시장에서 사고팔기, 다른 나라와 협상 모두 거래 한 번으로 쳐요.)</p>
+      <p>👑 마지막에 <b>재산(점수)</b>이 가장 높은 나라가 <b>세계 무역왕</b>! (점수 = 돈 + 자원·제품 가치)</p>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="good" style="flex:1" onclick="closeHelp()">게임으로 돌아가기</button>
+      <button class="ghost" style="flex:1" onclick="closeHelp(); openOnboard('review');">용어 설명 보기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* 세계 무역 게임 — 동작 프로토타입 (단일 HTML)
+   자원5/제품5/나라6 · 시장+협상 · 라운드 자동진행 · AI · 보드형 이동 시각화
+   * 추후: 모든 데이터를 구글 스프레드시트와 연동 예정 */
+const RES = {
+  oil:{name:'석유',icon:'🛢️',price:10}, iron:{name:'철광석',icon:'⛏️',price:10},
+  tech:{name:'기술',icon:'💡',price:15}, service:{name:'서비스',icon:'🤝',price:12}, labor:{name:'노동력',icon:'👷',price:8},
+};
+const RES_KEYS = Object.keys(RES);
+const PRODUCTS = {
+  fuel:{name:'연료',icon:'⛽',recipe:{oil:2},price:35}, car:{name:'자동차',icon:'🚗',recipe:{iron:2,labor:1},price:65},
+  phone:{name:'스마트폰',icon:'📱',recipe:{tech:2,iron:1},price:95}, software:{name:'소프트웨어',icon:'💻',recipe:{tech:1,service:2},price:95},
+  logistics:{name:'물류',icon:'🚢',recipe:{service:2,labor:1},price:65},
+};
+const PROD_KEYS = Object.keys(PRODUCTS);
+const COUNTRY_DEFS = [
+  { id:'oilland', name:'석유국', flag:'🏜️', start:{oil:10,iron:2,tech:1,service:2,labor:3}, regen:{oil:3,labor:1}, desc:'석유 풍부 · 기술 부족' },
+  { id:'ironland',name:'철강국', flag:'⛰️', start:{iron:10,oil:2,tech:2,service:1,labor:3}, regen:{iron:3,labor:1}, desc:'철광석 풍부 · 서비스 부족' },
+  { id:'techland',name:'기술국', flag:'🏙️', start:{tech:10,oil:1,iron:1,service:3,labor:2}, regen:{tech:3,service:1}, desc:'기술 풍부 · 석유 부족' },
+  { id:'servland',name:'서비스국',flag:'🏦', start:{service:10,oil:2,iron:1,tech:2,labor:2}, regen:{service:3,tech:1}, desc:'서비스 풍부 · 철광석 부족' },
+  { id:'people',  name:'인구국', flag:'👨‍👩‍👧', start:{labor:10,oil:2,iron:2,tech:1,service:2}, regen:{labor:3,iron:1}, desc:'노동력 풍부 · 기술 부족' },
+  { id:'balance', name:'균형국', flag:'🌐', start:{oil:4,iron:4,tech:3,service:3,labor:4}, regen:{oil:1,iron:1,tech:1,service:1,labor:1}, desc:'골고루 조금씩' },
+];
+let START_MONEY=300, MAX_ROUND=10, ROUND_SECONDS=60; const FLY_CAP=6;
+const CHECKPOINTS=[5,8], FINAL_ROUND=10;   // 5·8라운드에 계속할지 묻고, 최대 10라운드
+let state=null, timer=null, timeLeft=0, myId=null;
+let teamsData=null, myLineup=null;          // 팀 편성(시트) 정보
+let endedEarly=false;
+
+function specialtyOf(regen){ const s=Object.entries(regen).sort((a,b)=>b[1]-a[1]); return (s.length && (s.length<2 || s[0][1]>s[1][1])) ? s[0][0] : null; }
+function freshCountry(def,isAI){ return { id:def.id,name:def.name,flag:def.flag,desc:def.desc,regen:def.regen,spec:specialtyOf(def.regen),isAI,res:{...zeroRes(),...def.start},prod:zeroProd(),money:START_MONEY,
+  income:0, spending:0, trades:0, made:0, mood:50, player:null, _prevScore:0, _prevMoney:0 }; }
+function zeroRes(){ const o={}; RES_KEYS.forEach(k=>o[k]=0); return o; }
+function zeroProd(){ const o={}; PROD_KEYS.forEach(k=>o[k]=0); return o; }
+function setTab(name){ document.querySelectorAll('.tab-section').forEach(s=>s.classList.toggle('active',s.dataset.tab===name)); document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('active',b.dataset.go===name)); if(name==='home') requestAnimationFrame(fitArena); }
+
+const NAME2ID={'석유국':'oilland','철강국':'ironland','기술국':'techland','서비스국':'servland','인구국':'people','균형국':'balance'};
+
+// ====== 무역 배우기(온보딩) + 빈칸 퀴즈 ======
+const ONBOARD = [
+  { icon:'👑', h:'무역왕에 도전!',
+    body:`자원을 모아 <b>제품</b>을 만들고, 다른 나라와 <b>무역</b>해서 가장 부유한 나라가 되는 게임이에요.<br>시작 전에 꼭 알아야 할 용어 몇 개만 배우고 가요!`,
+    eg:`🏆 라운드가 끝났을 때 <b>재산(점수)</b>이 가장 높은 나라가 <b>세계 무역왕</b>!` },
+  { icon:'🏭', h:'생산과 소비',
+    body:`<b>생산</b>은 무언가를 <b>만들어 내는 것</b>, <b>소비</b>는 그것을 <b>쓰는 것</b>이에요.`,
+    eg:`철광석과 노동력으로 🚗 자동차를 <b>생산</b>하고, 그 차를 타는 건 <b>소비</b>예요.` },
+  { icon:'🏪', h:'시장과 가격',
+    body:`<b>시장</b>은 물건을 <b>사고파는 곳</b>이에요. 물건마다 <b>가격</b>(값)이 있어요. 싼 자원을 비싼 제품으로 만들면 이득이죠!`,
+    eg:`석유 🛢️ 10원 → 연료 ⛽ 35원. 만들수록 가치가 올라가요.` },
+  { icon:'🤝', h:'무역',
+    body:`<b>무역</b>은 나라끼리 필요한 것을 <b>사고파는 것</b>이에요. 우리에게 <b>많은 건 팔고</b>, <b>부족한 건 사오면</b> 서로 도움이 돼요.`,
+    eg:`석유국은 석유를 팔고, 부족한 기술은 기술국에서 사와요.` },
+  { icon:'💬', h:'협상 태도 — 시장보다 싸게!',
+    body:`다른 나라와 <b>직접 협상</b>하면 시장에서 사는 것보다 <b>더 싸게</b> 얻을 수 있어요. <b>어떤 태도</b>로 말하느냐, <b>사이가 얼마나 좋으냐</b>에 따라 깎아 주는 정도가 달라져요.`,
+    eg:`🙂 <b>정중히</b> — 사이가 좋을수록 더 깎아 줘요<br>🗣️ <b>설득</b> — 이유를 들어 조금 더 깎아 줘요<br>🙏 <b>조르기</b> — 조를수록 깎이지만 사이가 상해요<br>😤 <b>떼쓰기</b> — 크게 깎을 수도, 크게 틀어질 수도` },
+  { icon:'⭐', h:'특화 — 잘하는 것에 집중',
+    body:`나라마다 <b>잘 만드는 것</b>이 달라요. 잘하는 것에 <b>집중(특화)</b>하고 나머지는 무역으로 얻으면 모두가 더 잘살아요.`,
+    eg:`기술국은 💡 기술을 잔뜩 만들어 팔고, 다른 자원은 무역으로 채워요.` },
+  { icon:'💰', h:'수익과 지출',
+    body:`<b>수익</b>은 <b>번 돈</b>, <b>지출</b>은 <b>쓴 돈</b>이에요. 수익이 지출보다 많아야 부자가 돼요. 게임이 끝나면 둘을 비교해 줄게요!`,
+    eg:`자원 사는 데 100원 쓰고(지출), 제품 팔아 160원 벌면(수익) → 60원 남는 장사!` },
+];
+const QUIZ_SENTENCES = [
+  [ '물건을 만들어 내는 것은 ', {ans:'생산'}, ', 그것을 쓰는 것은 ', {ans:'소비'}, ' 예요.' ],
+  [ '물건을 사고파는 곳을 ', {ans:'시장'}, ' 이라고 해요.' ],
+  [ '나라끼리 필요한 것을 사고파는 것을 ', {ans:'무역'}, ' 이라고 해요.' ],
+  [ '번 돈은 ', {ans:'수익'}, ', 쓴 돈은 ', {ans:'지출'}, ' 이에요.' ],
+];
+const QUIZ_BANK = ['무역','생산','수익','소비','지출','시장'];
+let onbMode='learn', onbIndex=0, quizFill={}, quizSel=null;
+
+function openOnboard(mode){
+  onbMode=mode||'learn'; onbIndex=0; quizFill={}; quizSel=null;
+  document.getElementById('startScreen').classList.add('hide');
+  if(onbMode==='endquiz'){ document.getElementById('endScreen').classList.add('hide'); }   // 종료 화면 위에 겹치지 않게 잠시 숨김
+  document.getElementById('onboardScreen').classList.remove('hide');
+  renderOnb();
+}
+function closeOnboard(){
+  document.getElementById('onboardScreen').classList.add('hide');
+  if(onbMode==='endquiz'){ document.getElementById('endScreen').classList.remove('hide'); }   // 퀴즈를 마치면 다시 게임 결과로
+}
+function onbTotal(){ return onbMode==='endquiz' ? 1 : (ONBOARD.length + (onbMode==='learn'?1:0)); }
+function onbPrev(){ if(onbIndex>0){ onbIndex--; renderOnb(); } }
+function onbNext(){ if(onbIndex<onbTotal()-1){ onbIndex++; renderOnb(); } }
+
+function renderOnb(){
+  const total=onbTotal(), isQuiz=(onbMode==='endquiz') || (onbMode==='learn' && onbIndex>=ONBOARD.length);
+  let dots=''; for(let i=0;i<total;i++) dots+=`<span class="onb-dot ${i===onbIndex?'on':''}"></span>`;
+  document.getElementById('onbDots').innerHTML=dots;
+  const stage=document.getElementById('onbStage'), nav=document.getElementById('onbNav');
+  if(isQuiz){ renderQuiz(); return; }
+  const p=ONBOARD[onbIndex];
+  stage.innerHTML=`<div class="onb-icon">${p.icon}</div><div class="onb-h">${p.h}</div>
+    <div class="onb-body">${p.body}</div>${p.eg?`<div class="onb-eg">${p.eg}</div>`:''}`;
+  const last=(onbIndex===ONBOARD.length-1);
+  let html='';
+  if(onbIndex>0) html+=`<button class="ghost" onclick="onbPrev()">← 이전</button>`;
+  if(!last) html+=`<button class="good" onclick="onbNext()">다음 →</button>`;
+  else if(onbMode==='learn') html+=`<button class="good" onclick="onbNext()">마지막! 퀴즈 풀기 →</button>`;
+  else html+=`<button class="good" onclick="closeOnboard()">닫기</button>`;
+  if(onbMode==='review' && !last) html+=`<button class="ghost" onclick="closeOnboard()">✕ 게임으로</button>`;   // 용어 설명 중 언제든 게임으로
+  nav.innerHTML=html;
+}
+
+function quizBlanks(){ const a=[]; QUIZ_SENTENCES.forEach(s=>s.forEach(t=>{ if(typeof t!=='string') a.push(t); })); return a; }
+function renderQuiz(){
+  const stage=document.getElementById('onbStage'), nav=document.getElementById('onbNav');
+  const used=new Set(Object.values(quizFill).filter(Boolean));
+  let bi=0;
+  let html='<div class="onb-icon">📝</div><div class="onb-h">용어 퀴즈</div>'+
+    '<div class="onb-body" style="text-align:center;margin-bottom:8px">빈칸을 누른 뒤 아래 용어을 골라 채워 보세요!</div>';
+  QUIZ_SENTENCES.forEach((s,si)=>{
+    html+=`<div class="quiz-q" id="quizq${si}">`;
+    s.forEach(t=>{
+      if(typeof t==='string'){ html+=t.replace(/ /g,'&nbsp;'); }
+      else{ const idx=bi++; const val=quizFill[idx];
+        html+=`<span class="blank ${val?'':'empty'}${quizSel===idx?' sel':''}" onclick="quizBlank(${idx})">${val||'&nbsp;&nbsp;&nbsp;'}</span>`; }
+    });
+    html+='</div>';
+  });
+  html+='<div class="word-bank">'+QUIZ_BANK.map(w=>`<span class="word ${used.has(w)?'used':''}" onclick="quizWord('${w}')">${w}</span>`).join('')+'</div>';
+  html+='<div class="quiz-fb" id="quizFb"></div>';
+  stage.innerHTML=html;
+  const backBtn = onbMode==='endquiz' ? `<button class="ghost" onclick="closeOnboard()">✕ 닫기</button>` : `<button class="ghost" onclick="onbPrev()">← 다시 보기</button>`;
+  nav.innerHTML=`${backBtn}<button class="good" onclick="quizCheck()">정답 확인</button>`;
+}
+function quizBlank(i){
+  if(quizFill[i]){ delete quizFill[i]; quizSel=null; }
+  else { quizSel=(quizSel===i?null:i); }
+  renderQuiz();
+}
+function quizWord(w){
+  const used=new Set(Object.values(quizFill).filter(Boolean));
+  if(used.has(w)) return;
+  const n=quizBlanks().length;
+  let target=(quizSel!=null && !quizFill[quizSel])?quizSel:null;
+  if(target==null){ for(let i=0;i<n;i++){ if(!quizFill[i]){ target=i; break; } } }
+  if(target==null) return;
+  quizFill[target]=w; quizSel=null; renderQuiz();
+}
+function quizCheck(){
+  let allOk=true, bi=0;
+  QUIZ_SENTENCES.forEach((s,si)=>{
+    let ok=true; s.forEach(t=>{ if(typeof t!=='string'){ const idx=bi++; if(quizFill[idx]!==t.ans) ok=false; } });
+    const el=document.getElementById('quizq'+si); if(el) el.className='quiz-q '+(ok?'ok':'no');
+    if(!ok) allOk=false;
+  });
+  const fb=document.getElementById('quizFb');
+  if(allOk){
+    fb.style.color='var(--good)';
+    if(onbMode==='endquiz'){
+      fb.textContent='🎉 정답이에요! 용어를 잘 기억했어요.';
+      document.getElementById('onbNav').innerHTML=`<button class="good" style="flex:1" onclick="closeOnboard()">🏁 게임 결과로 돌아가기</button>`;
+    } else {
+      fb.textContent='🎉 정답이에요! 이제 나라를 골라 볼까요?';
+      document.getElementById('onbNav').innerHTML=`<button class="good" style="flex:1" onclick="finishOnboard()">🌍 나라 고르러 가기 →</button>`;
+    }
+  } else {
+    fb.style.color='var(--bad)'; fb.textContent='조금 더! 빨간 줄을 다시 확인해 보세요.';
+  }
+}
+function finishOnboard(){ closeOnboard(); showCountryScreen(); }
+
+// 학습을 마치면 호출 — 팀이 있으면 팀 라인업, 없으면 자유 선택
+function showCountryScreen(){
+  document.getElementById('onboardScreen').classList.add('hide');
+  document.getElementById('startScreen').classList.add('hide');
+  document.getElementById('countryScreen').classList.remove('hide');
+  myLineup = buildLineup();
+  const teamEl=document.getElementById('teamLineup'), pickEl=document.getElementById('countryPick');
+  if(myLineup){
+    document.getElementById('csTitle').textContent='👥 우리 팀 — '+myLineup.team;
+    document.getElementById('csDesc').innerHTML='우리 팀 자리예요. <b>내 나라</b>를 눌러 시작하세요. 사람이 없는 자리는 컴퓨터가 맡아요.';
+    document.getElementById('csFoot').textContent='빈 자리(또는 집에서 혼자 할 때)는 컴퓨터가 운영합니다.';
+    teamEl.innerHTML = myLineup.slots.map(s=>{
+      const def=COUNTRY_DEFS.find(d=>d.id===s.id);
+      const tag = s.isMe?'<span class="ttag me">나</span>' : (s.player?'<span class="ttag mate">친구</span>':'<span class="ttag cpu">컴퓨터</span>');
+      const click = s.isMe?`onclick="startGame('${s.id}')"`:'';
+      const cur = s.isMe?'cursor:pointer;outline:2px solid var(--accent)':'';
+      return `<div class="team-line" style="${cur}" ${click}><span class="tflag">${def.flag}</span><span class="tname">${def.name}${s.player?` · ${esc(s.player)}`:''}</span>${tag}</div>`;
+    }).join('');
+    pickEl.innerHTML='';
+  } else {
+    document.getElementById('csTitle').textContent='🌍 맡을 나라 고르기';
+    document.getElementById('csDesc').innerHTML='나라마다 잘 만드는 것이 달라요. 하나를 골라 무역왕에 도전하세요!';
+    document.getElementById('csFoot').textContent='선택한 나라는 여러분이, 나머지 나라는 컴퓨터가 운영합니다.';
+    teamEl.innerHTML='';
+    pickEl.innerHTML = COUNTRY_DEFS.map(def=>{
+      const spec=specialtyOf(def.regen); const big = spec?`${RES[spec].icon} ${RES[spec].name} 강국`:'균형 잡힌 나라';
+      return `<div class="pick" onclick="startGame('${def.id}')"><div class="pf">${def.flag}</div><div class="pn">${def.name}</div><div class="pbig">${big}</div><div class="pd">${def.desc}</div></div>`;
+    }).join('');
+  }
+}
+
+// 시트의 팀 편성에서 내 팀 라인업을 구성 (없으면 null → 자유 선택)
+function buildLineup(){
+  if(!chosenName || !teamsData || !teamsData.length) return null;
+  const mine = teamsData.find(r=>r.name===chosenName && r.team);
+  if(!mine) return null;
+  const team = mine.team;
+  const members = teamsData.filter(r=>r.team===team && r.name);
+  const used={}; const slots=[];
+  // 지정된 나라 먼저 배정
+  members.forEach(m=>{ const id=NAME2ID[(m.country||'').trim()]; if(id && !used[id]){ used[id]=m.name; } });
+  // 라인업 6칸 구성
+  COUNTRY_DEFS.forEach(def=>{
+    const player = used[def.id] || null;
+    slots.push({ id:def.id, player, isMe:false });
+  });
+  // 나라 미지정 멤버를 빈 칸에 채움
+  const unplaced = members.filter(m=>{ const id=NAME2ID[(m.country||'').trim()]; return !(id); });
+  unplaced.forEach(m=>{ const free=slots.find(s=>!s.player); if(free){ free.player=m.name; used[free.id]=m.name; } });
+  // 내 자리 표시
+  let mySlot = slots.find(s=>s.player===chosenName);
+  if(!mySlot){ mySlot=slots.find(s=>!s.player) || slots[0]; mySlot.player=chosenName; }
+  mySlot.isMe=true;
+  return { team, slots, myCountryId: mySlot.id };
+}
+
+function startGame(chosenId){
+  myId=chosenId; gameDone=false;
+  state={ round:1, countries:COUNTRY_DEFS.map(def=>freshCountry(def, def.id!==chosenId)) };
+  state.tradedThisRound={};
+  // 팀 친구 이름을 각 나라에 붙이기 (이 기기에선 컴퓨터가 대신 운영)
+  if(myLineup){ myLineup.slots.forEach(s=>{ const c=getCountry(s.id); if(c && s.player && !s.isMe) c.player=s.player; }); }
+  state.countries.forEach(c=>{ c._prevScore=scoreOf(c); c._prevMoney=c.money; });
+  document.getElementById('countryScreen').classList.add('hide');
+  document.getElementById('startScreen').classList.add('hide');
+  document.getElementById('game').classList.remove('hide');
+  document.getElementById('roundMax').textContent=FINAL_ROUND;
+  const me=getMe();
+  document.getElementById('hudFlag').textContent=me.flag;
+  document.getElementById('hudName').textContent=me.name;
+  setTab('home'); log(`<b>${me.name}</b>(으)로 게임 시작!`);
+  logActivity('시작', `${me.flag}${me.name}(으)로 시작`);
+  renderAll(); startTimer(); saveGame();
+}
+function getMe(){ return state.countries.find(c=>c.id===myId); }
+function getCountry(id){ return state.countries.find(c=>c.id===id); }
+function topId(){ return [...state.countries].sort((a,b)=>scoreOf(b)-scoreOf(a))[0].id; }
+function scoreOf(c){ let s=c.money; RES_KEYS.forEach(k=>s+=c.res[k]*RES[k].price); PROD_KEYS.forEach(k=>s+=c.prod[k]*PRODUCTS[k].price); return Math.round(s); }
+function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderAll(){ renderHud(); renderArena(); renderWorkshop(); renderMarket(); scheduleSave(); }
+
+function renderHud(){
+  const me=getMe();
+  document.getElementById('hudMoney').textContent=me.money;
+  document.getElementById('hudRes').innerHTML = RES_KEYS.map(k=>`
+    <div class="hud-cell ${me.spec===k?'spec':''}" id="hud-${k}">
+      <div class="ic">${RES[k].icon}</div><div class="ct">${me.res[k]}</div><div class="nm">${RES[k].name}</div></div>`).join('');
+  const owned=PROD_KEYS.filter(k=>me.prod[k]>0);
+  document.getElementById('hudProd').innerHTML = owned.length
+    ? ' '+owned.map(k=>`<span class="prod-badge">${PRODUCTS[k].icon}<span class="rc">${me.prod[k]}</span></span>`).join(' ')
+    : ' <span class="note">아직 없음</span>';
+}
+function miniRes(c){
+  return RES_KEYS.map(k=>`<span class="u ${c.spec===k?'spec':''}">${RES[k].icon}<b>${c.res[k]}</b></span>`).join('');
+}
+function renderArena(){
+  const me=getMe(); const others=state.countries.filter(c=>c.id!==myId); const tid=topId();
+  const ring=[{type:'market'}].concat(others.map(c=>({type:'country',c})));
+  const RX=40, RY=33; let lines='', nodes='';   // 가로로 더 펼치고 세로는 좁혀 잘림 방지
+  ring.forEach((node,i)=>{
+    const ang=(-90+i*60)*Math.PI/180; const x=50+RX*Math.cos(ang), y=50+RY*Math.sin(ang);
+    lines+=`<line x1="50" y1="50" x2="${x.toFixed(2)}" y2="${y.toFixed(2)}"/>`;
+    if(node.type==='market'){
+      nodes+=`<div class="ring-node market" id="tile-__market" style="left:${x}%;top:${y}%" onclick="openMarket()">
+        <div class="rn-flag">🏪</div><div class="rn-name">세계 시장</div><div class="rn-cta">눌러서<br>사고팔기</div></div>`;
+    } else {
+      const c=node.c;
+      const ptag = c.player?`<div class="rn-cta" style="color:var(--accent);font-weight:800">${esc(c.player)}</div>`:'';
+      nodes+=`<div class="ring-node ${c.id===tid?'win':''}" id="tile-${c.id}" style="left:${x}%;top:${y}%" onclick="openNeg('${c.id}')">
+        <div class="rn-flag">${c.flag}</div><div class="rn-name">${c.name}</div>${ptag}
+        <div class="rn-money">💰${c.money}</div><div class="rn-res">${miniRes(c)}</div></div>`;
+    }
+  });
+  document.getElementById('arena').innerHTML =
+    `<svg class="arena-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>
+     <div class="me-pod ${me.id===tid?'win':''}" id="tile-${myId}" onclick="setTab('make')">
+       <div class="mp-flag">${me.flag}</div>
+       <div class="mp-name">${me.name} <span class="mp-tag">나</span></div>
+       <div class="mp-money">💰${me.money}</div>
+       <div class="mp-hint">눌러서 제작 🛠️</div>
+     </div>${nodes}`;
+  requestAnimationFrame(fitArena);
+}
+// 데스크톱에서 보드를 남은 화면 높이에 맞춰 정사각형으로 크기 조정 (스크롤 방지)
+function fitArena(){
+  const arena=document.getElementById('arena'); if(!arena) return;
+  // 크기는 CSS가 담당(데스크톱: 카드 직사각형 꽉 채움 / 모바일: 정사각형)
+  const r=arena.getBoundingClientRect();
+  // 나라 카드·글자 크기 기준값: 짧은 변에 맞춤(너무 커지지 않게)
+  const base = window.innerWidth>=980 ? Math.min(r.width, r.height) : r.width;
+  if(base>0) arena.style.setProperty('--as', Math.round(base)+'px');
+}
+window.addEventListener('resize', fitArena);
+function renderWorkshop(){
+  const me=getMe();
+  document.getElementById('workshop').innerHTML = PROD_KEYS.map(k=>{
+    const p=PRODUCTS[k];
+    const ings=Object.entries(p.recipe).map(([rk,n])=>{ const ok=me.res[rk]>=n; return `<span class="ing ${ok?'ok':'no'}">${RES[rk].icon}×${n}<small>(${me.res[rk]}/${n})</small></span>`; }).join(' ');
+    const can=Object.entries(p.recipe).every(([rk,n])=>me.res[rk]>=n);
+    return `<div class="product ${can?'can':'locked'}"><div class="recipe-visual">${ings}<span class="arrow">➡️</span><span class="result-pill">${p.icon} ${p.name} <span class="price">+${p.price}</span></span></div>
+      <button class="good sm" ${can?'':'disabled'} onclick="makeProduct('${k}')">만들기</button></div>`;
+  }).join('');
+}
+function renderMarket(){
+  const me=getMe();
+  renderNations();
+  document.getElementById('mktResources').innerHTML = RES_KEYS.map(k=>`
+    <div class="mkt-row"><span class="mkt-ic">${RES[k].icon}</span><span class="mkt-name">${RES[k].name}</span>
+      <span class="mkt-meta">💰${RES[k].price}</span><span class="mkt-meta">보유 <span class="mkt-have">${me.res[k]}</span></span>
+      <span class="mkt-actions"><button class="sm" onclick="buyRes('${k}')">사기</button><button class="sm ghost" onclick="sellRes('${k}')" ${me.res[k]>0?'':'disabled'}>팔기</button></span></div>`).join('');
+  document.getElementById('mktProducts').innerHTML = PROD_KEYS.map(k=>`
+    <div class="mkt-row"><span class="mkt-ic">${PRODUCTS[k].icon}</span><span class="mkt-name">${PRODUCTS[k].name}</span>
+      <span class="mkt-meta">💰${PRODUCTS[k].price}</span><span class="mkt-meta">보유 <span class="mkt-have">${me.prod[k]}</span></span>
+      <span class="mkt-actions"><button class="sm" onclick="buyProd('${k}')">사기</button><button class="sm ghost" onclick="sellProd('${k}')" ${me.prod[k]>0?'':'disabled'}>팔기</button></span></div>`).join('');
+}
+function renderNations(){
+  const el=document.getElementById('mktNations'); if(!el) return;
+  const tid=topId();
+  el.innerHTML = state.countries.filter(c=>c.id!==myId).map(c=>{
+    const res=RES_KEYS.filter(k=>c.res[k]>0).map(k=>`${RES[k].icon}${c.res[k]}`).join(' ')||'—';
+    const prod=PROD_KEYS.filter(k=>c.prod[k]>0).map(k=>`${PRODUCTS[k].icon}${c.prod[k]}`).join(' ');
+    return `<div class="nation-row ${c.id===tid?'lead':''}">
+      <span class="nf">${c.flag}</span>
+      <span><span class="nn">${c.name}${c.id===tid?' 👑':''}</span>${c.player?`<br><span class="nplayer">${esc(c.player)}</span>`:''}<br><span class="nres">${res}${prod?' · '+prod:''}</span></span>
+      <span class="nmoney">💰${c.money}</span>
+      <span class="nact"><button class="sm" onclick="closeMarket();openNeg('${c.id}')">협상</button></span></div>`;
+  }).join('');
+}
+
+// ---------- 제작 ----------
+function makeProduct(k){
+  const me=getMe(), p=PRODUCTS[k];
+  for(const [rk,n] of Object.entries(p.recipe)) if(me.res[rk]<n) return;
+  for(const [rk,n] of Object.entries(p.recipe)) me.res[rk]-=n;
+  me.prod[k]++; me.made++; showToast(`${p.icon} ${p.name} 완성!`,'good'); log(`🛠️ <b>${me.name}</b>이(가) ${p.icon} ${p.name} 제작`); renderAll();
+}
+// ---------- 시장 (이동 애니메이션 포함) ----------
+function arenaVisible(){ return window.innerWidth>=980 || document.querySelector('[data-tab="home"]').classList.contains('active'); }
+function marketFly(itemEmoji, dir){ // dir: 'in'(시장→나) 'out'(나→시장)
+  if(!arenaVisible()) return;
+  const meEl=document.getElementById('tile-'+myId), mk=document.getElementById('tile-__market');
+  if(!meEl||!mk) return;
+  if(dir==='in') flyBetween(mk,meEl,itemEmoji,0); else flyBetween(meEl,mk,itemEmoji,0);
+}
+function buyRes(k){ const me=getMe(); if(me.money<RES[k].price) return toast('돈이 부족해요'); me.money-=RES[k].price; me.spending+=RES[k].price; me.res[k]++; marketFly('💰','out'); marketFly(RES[k].icon,'in'); showToast(`${RES[k].icon}+1  💰-${RES[k].price}`,'info'); log(`🏪 ${RES[k].icon}${RES[k].name} 구입`); markTraded(myId); renderAll(); }
+function sellRes(k){ const me=getMe(); if(me.res[k]<=0) return; me.res[k]--; me.money+=RES[k].price; me.income+=RES[k].price; marketFly(RES[k].icon,'out'); marketFly('💰','in'); showToast(`${RES[k].icon}-1  💰+${RES[k].price}`,'info'); log(`🏪 ${RES[k].icon}${RES[k].name} 판매`); markTraded(myId); renderAll(); }
+function buyProd(k){ const me=getMe(); if(me.money<PRODUCTS[k].price) return toast('돈이 부족해요'); me.money-=PRODUCTS[k].price; me.spending+=PRODUCTS[k].price; me.prod[k]++; marketFly('💰','out'); marketFly(PRODUCTS[k].icon,'in'); showToast(`${PRODUCTS[k].icon}+1  💰-${PRODUCTS[k].price}`,'info'); log(`🏪 ${PRODUCTS[k].icon}${PRODUCTS[k].name} 구입`); markTraded(myId); renderAll(); }
+function sellProd(k){ const me=getMe(); if(me.prod[k]<=0) return; me.prod[k]--; me.money+=PRODUCTS[k].price; me.income+=PRODUCTS[k].price; marketFly(PRODUCTS[k].icon,'out'); marketFly('💰','in'); showToast(`${PRODUCTS[k].icon}-1  💰+${PRODUCTS[k].price}`,'info'); log(`🏪 ${PRODUCTS[k].icon}${PRODUCTS[k].name} 판매`); markTraded(myId); renderAll(); }
+
+// ---------- 가이드(학습 복습) ----------
+function openGuide(){ document.getElementById('helpModal').classList.add('show'); }
+function closeHelp(){ document.getElementById('helpModal').classList.remove('show'); }
+
+// ---------- 시장 모달 ----------
+function openMarket(){ renderMarket(); document.getElementById('mktModal').classList.add('show'); }
+function closeMarket(){ document.getElementById('mktModal').classList.remove('show'); }
+
+// ---------- 협상 (태도·관계 반영) ----------
+let negTarget=null, negGive=null, negGet=null, negMoneyGive=0, negMoneyGet=0, begCount=0;
+function openNeg(id){
+  negTarget=getCountry(id); negGive={...zeroRes(),...zeroProd()}; negGet={...zeroRes(),...zeroProd()}; negMoneyGive=0; negMoneyGet=0; begCount=0;
+  const who = negTarget.player ? `${negTarget.flag} ${negTarget.name}(${esc(negTarget.player)})` : `${negTarget.flag} ${negTarget.name}`;
+  document.getElementById('negTitle').textContent=`🤝 ${who} 와(과) 협상`;
+  document.getElementById('negHint').textContent='주고받을 것을 정하고 태도를 골라 제안해요. 시장에서 그냥 사는 것보다 싸게 얻는 게 협상의 묘미 — 사이가 좋을수록 더 깎여요!';
+  const react=document.getElementById('negReact'); react.className='neg-react'; react.textContent='상대가 기다리고 있어요. 주고받을 것을 정하고 태도를 골라 보세요.';
+  renderMood(); renderNegLists();
+  document.getElementById('negModal').classList.add('show');
+}
+function renderMood(){
+  const m=negTarget?negTarget.mood:50;
+  document.getElementById('moodFill').style.width=Math.max(4,Math.min(100,m))+'%';
+  document.getElementById('moodTxt').textContent = m>=75?'아주 좋음':m>=55?'좋음':m>=40?'보통':m>=22?'나쁨':'아주 나쁨';
+}
+function closeNeg(){ document.getElementById('negModal').classList.remove('show'); }
+function negStepper(side,key,label,icon,max){ const s=side==='give'?negGive:negGet; return `<div class="stepper"><span class="lbl">${icon} ${label} <span class="note">(최대 ${max})</span></span><span class="ctrl"><button class="rnd-btn" onclick="negAdj('${side}','${key}',-1,${max})">−</button><span class="val">${s[key]||0}</span><button class="rnd-btn" onclick="negAdj('${side}','${key}',1,${max})">＋</button></span></div>`; }
+function renderNegLists(){
+  const me=getMe(), t=negTarget;
+  let give=`<div class="note">자원</div>`+RES_KEYS.map(k=>negStepper('give',k,RES[k].name,RES[k].icon,me.res[k])).join('');
+  give+=`<div class="note">제품</div>`+(PROD_KEYS.filter(k=>me.prod[k]>0||negGive[k]>0).map(k=>negStepper('give',k,PRODUCTS[k].name,PRODUCTS[k].icon,me.prod[k])).join('')||'<span class="note">팔 제품 없음</span>');
+  give+=`<div class="stepper money"><span class="lbl">💰 돈</span><span class="ctrl"><button class="rnd-btn mny" onclick="negMoney('give',-10)">−10</button><button class="rnd-btn mny" onclick="negMoney('give',-1)">−1</button><span class="val">${negMoneyGive}</span><button class="rnd-btn mny" onclick="negMoney('give',1)">＋1</button><button class="rnd-btn mny" onclick="negMoney('give',10)">＋10</button></span></div>`;
+  document.getElementById('giveList').innerHTML=give;
+  let get=`<div class="note">자원</div>`+RES_KEYS.map(k=>negStepper('get',k,RES[k].name,RES[k].icon,t.res[k])).join('');
+  get+=`<div class="note">제품</div>`+(PROD_KEYS.filter(k=>t.prod[k]>0||negGet[k]>0).map(k=>negStepper('get',k,PRODUCTS[k].name,PRODUCTS[k].icon,t.prod[k])).join('')||'<span class="note">상대 제품 없음</span>');
+  get+=`<div class="stepper money"><span class="lbl">💰 돈</span><span class="ctrl"><button class="rnd-btn mny" onclick="negMoney('get',-10)">−10</button><button class="rnd-btn mny" onclick="negMoney('get',-1)">−1</button><span class="val">${negMoneyGet}</span><button class="rnd-btn mny" onclick="negMoney('get',1)">＋1</button><button class="rnd-btn mny" onclick="negMoney('get',10)">＋10</button></span></div>`;
+  document.getElementById('getList').innerHTML=get;
+  document.getElementById('giveVal').textContent=bundleValue(negGive,negMoneyGive);
+  document.getElementById('getVal').textContent=bundleValue(negGet,negMoneyGet);
+}
+function negAdj(side,key,delta,max){ const s=side==='give'?negGive:negGet; s[key]=Math.max(0,Math.min(max,(s[key]||0)+delta)); renderNegLists(); }
+function negMoney(side,delta){ if(side==='give') negMoneyGive=Math.max(0,Math.min(getMe().money,negMoneyGive+delta)); else negMoneyGet=Math.max(0,Math.min(negTarget.money,negMoneyGet+delta)); renderNegLists(); }
+function bundleValue(b,m){ let v=m||0; RES_KEYS.forEach(k=>v+=(b[k]||0)*RES[k].price); PROD_KEYS.forEach(k=>v+=(b[k]||0)*PRODUCTS[k].price); return v; }
+function describeBundle(b,m){ const p=[]; RES_KEYS.forEach(k=>{if(b[k]>0)p.push(`${RES[k].icon}${b[k]}`);}); PROD_KEYS.forEach(k=>{if(b[k]>0)p.push(`${PRODUCTS[k].icon}${b[k]}`);}); if(m>0)p.push(`💰${m}`); return p.join(' ')||'없음'; }
+function negReact(cls,html){ const el=document.getElementById('negReact'); el.className='neg-react '+(cls||''); el.innerHTML=html; }
+
+// 태도(strategy)로 제안 — 직접 무역은 '시장보다 이득'이어야 의미가 있다.
+// 상대는 관계(mood)가 좋을수록, 태도에 따라 값을 더 깎아 준다.
+// 그래서 협상은 '값이 똑같아질 때까지'가 아니라 '적정한 할인선'에서 끝난다.
+function negotiate(strategy){
+  const me=getMe(), t=negTarget;
+  const give=bundleValue(negGive,negMoneyGive), get=bundleValue(negGet,negMoneyGet); // give=내가 줌(상대 받음), get=내가 받음(상대 줌)
+  if(give===0 && get===0) return negReact('mid','주고받을 항목을 먼저 정해 주세요. (오른쪽/왼쪽의 ＋ 버튼)');
+  // 충분히 주는지 확인 (재고)
+  for(const k of RES_KEYS){ if((negGive[k]||0)>me.res[k]) return negReact('bad','내가 가진 것보다 많이 줄 수는 없어요.'); if((negGet[k]||0)>t.res[k]) return negReact('bad',`${t.name}이(가) 가진 것보다 많이 받을 수는 없어요.`); }
+  if(negMoneyGive>me.money) return negReact('bad','내 돈보다 많이 줄 수 없어요.');
+
+  // fair = 내가 주는 값 / 내가 받는 값. 1.0이면 값이 딱 같음(=시장과 다를 바 없음), 낮을수록 나에게 이득.
+  // threshold = 상대가 받아들이는 최소 fair. 1.0보다 낮게 두어 '시장보다 싼 직거래'를 성사시킨다.
+  const fair = give / Math.max(get,1);
+  const mood = t.mood, md=(mood-50)/50;          // md: -1(아주 나쁨) ~ +1(아주 좋음)
+  const who=`<span class="who">${t.name}${t.player?'('+esc(t.player)+')':''}</span>`;
+  let threshold, line='', okLine='', moodDelta=0; const roll=Math.random();
+
+  if(strategy==='정중'){          // 관계 기반 기본 할인 — 안전하고 사이가 좋아짐. '적정선'에서 타결.
+    threshold = 0.93 - md*0.08;   // 보통 7%↓, 아주 친하면 15%↓ / 사이 나쁘면 거의 등가
+    line = `${who}: “정중히 부탁하시니, 우리 사이 봐서 조금 깎아 드릴게요.”`;
+    okLine = '“좋아요, 이 값에 거래해요!”'; moodDelta = 3;
+  } else if(strategy==='설득'){   // 이유를 대면 조금 더 깎임.
+    threshold = 0.88 - md*0.09;
+    line = `${who}: “흠… 그 말도 일리가 있네요.”`;
+    okLine = '“설득됐어요, 그렇게 합시다.”'; moodDelta = 2;
+  } else if(strategy==='조르기'){ // 조를수록 더 깎이지만 사이가 상함(누적).
+    begCount++;
+    threshold = Math.max(0.80, (0.90 - begCount*0.03) - md*0.06);
+    line = begCount>=3 ? `${who}: “아유, 자꾸 조르시네요…”` : `${who}: “정 그러시면 조금 더 봐 드릴까…”`;
+    okLine = '“에휴, 이번 한 번만이에요.”'; moodDelta = -4;
+    if(begCount>=4 && mood<35){ negReact('bad', `${who}: “그만 좀 졸라요! 기분 상했어요.” 😣`); t.mood=Math.max(0,t.mood-8); renderMood(); return; }
+  } else {                        // 떼쓰기 — 크게 깎을 수도, 크게 틀어질 수도.
+    threshold = 0.78 - md*0.05;
+    line = `${who}: “떼쓴다고 다 되는 건 아니에요…”`;
+    okLine = '“…알겠어요, 이번엔 받을게요.”'; moodDelta = -12;
+    if(mood<30 || roll<0.3){ negReact('bad', `${who}: “그런 식이면 거래 안 해요!” 😠`); t.mood=Math.max(0,t.mood-12); renderMood(); return; }
+  }
+  threshold = Math.max(0.72, Math.min(1.05, threshold));   // 극단 방지(사이 나쁘면 시장보다 비쌀 수도)
+
+  const luck = (roll-0.5)*0.05;                  // 약간의 운 요소
+  const accepted = fair >= (threshold - luck);
+
+  if(!accepted){
+    const more = Math.max(1, Math.ceil((threshold-luck)*get - give));
+    t.mood = Math.max(0, t.mood + Math.round(moodDelta/2));
+    negReact('bad', `${line}<br><span class="note">아직 조금 아쉽대요 — 💰${more}어치만 <b>더 주거나 덜 받으면</b> 될 것 같아요.${mood<60?' <b>사이가 좋아지면</b> 더 깎아 줄 거예요.':''}</span>`);
+    showToast(`🙅 ${t.name}이(가) 망설여요`,'bad');
+    renderMood(); renderNegLists(); return;
+  }
+
+  // 성사 — 자원/제품/돈 이동
+  const sg={...negGive}, st={...negGet}, gm=negMoneyGive, tm=negMoneyGet, tid=t.id;
+  RES_KEYS.forEach(k=>{ me.res[k]-=(negGive[k]||0); t.res[k]+=(negGive[k]||0); t.res[k]-=(negGet[k]||0); me.res[k]+=(negGet[k]||0); });
+  PROD_KEYS.forEach(k=>{ me.prod[k]-=(negGive[k]||0); t.prod[k]+=(negGive[k]||0); t.prod[k]-=(negGet[k]||0); me.prod[k]+=(negGet[k]||0); });
+  me.money-=gm; t.money+=gm; t.money-=tm; me.money+=tm;
+  me.spending+=give; me.income+=get; me.trades++;
+  markTraded(myId); markTraded(t.id);
+  t.mood = Math.max(0, Math.min(100, t.mood + moodDelta));
+  negReact('good', `${who}: ${okLine} ✅<br><span class="note">${describeBundle(sg,gm)} ➡️ &nbsp; ⬅️ ${describeBundle(st,tm)}</span>`);
+  showToast(`✅ ${t.name}이(가) 수락했어요!`,'good');
+  log(`✅ <b>${me.name}</b> ↔ <b>${t.name}</b> 무역 성사 (${strategy})`);
+  logActivity('무역', `${t.flag||''}${t.name}와(과) 무역 성사`);
+  renderMood(); renderAll();
+  setTimeout(()=>{ closeNeg(); setTab('home'); requestAnimationFrame(()=>animateTrade(sg,gm,st,tm,tid)); }, 900);
+}
+
+// ---------- 이동 애니메이션 ----------
+function flyBetween(fromEl,toEl,emoji,delay){
+  const a=fromEl.getBoundingClientRect(), b=toEl.getBoundingClientRect();
+  if(!a.width||!b.width) return;
+  const f=document.createElement('div'); f.className='fly'; f.textContent=emoji;
+  f.style.left=(a.left+a.width/2-17)+'px'; f.style.top=(a.top+a.height/2-17)+'px';
+  document.body.appendChild(f);
+  const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+  setTimeout(()=>requestAnimationFrame(()=>{ f.style.transform=`translate(${dx}px,${dy}px) scale(1.3)`; f.style.opacity='0'; }), delay);
+  setTimeout(()=>{ f.remove(); toEl.classList.add('pulse-pod'); setTimeout(()=>toEl.classList.remove('pulse-pod'),500); }, delay+900);
+}
+function animateTrade(give,gm,get,tm,tid){
+  const meEl=document.getElementById('tile-'+myId), tEl=document.getElementById('tile-'+tid);
+  if(!meEl||!tEl) return;
+  let d=0; const fly=(from,to,emoji,count)=>{ const n=Math.min(count,FLY_CAP); for(let i=0;i<n;i++){ flyBetween(from,to,emoji,d); d+=110; } };
+  RES_KEYS.forEach(k=>{ if(give[k]>0) fly(meEl,tEl,RES[k].icon,give[k]); });
+  PROD_KEYS.forEach(k=>{ if(give[k]>0) fly(meEl,tEl,PRODUCTS[k].icon,give[k]); });
+  if(gm>0) fly(meEl,tEl,'💰',1);
+  RES_KEYS.forEach(k=>{ if(get[k]>0) fly(tEl,meEl,RES[k].icon,get[k]); });
+  PROD_KEYS.forEach(k=>{ if(get[k]>0) fly(tEl,meEl,PRODUCTS[k].icon,get[k]); });
+  if(tm>0) fly(tEl,meEl,'💰',1);
+}
+
+// ---------- 라운드: 모든 나라가 한 번 이상 거래하면 끝 ----------
+// 컴퓨터도 사람처럼 천천히 — 가격을 비교하고, 협상하고, 여러 번 고민한 뒤에 거래해요.
+let roundEnding=false, currentOffer=null, roundStartAt=0, nextOfferAt=0;
+function rsMs(){ return Math.max(20, ROUND_SECONDS)*1000; }   // 라운드 시간(초) 설정을 사람 속도 기준으로 사용
+function initAiPace(){
+  const now=Date.now(), T=rsMs();
+  state.countries.forEach(c=>{
+    if(c.id===myId) return;
+    if((state.tradedThisRound[c.id]||0)>=requiredTrades()){ c._doneAt=0; c._thinkAt=0; return; }
+    c._doneAt = now + (0.35 + Math.random()*0.55)*T;     // 라운드의 35~90% 시점에 거래를 마침(서로 다르게)
+    c._thinkAt = now + (0.05 + Math.random()*0.15)*T;    // 그 전까지 가격 비교·협상하는 모습을 보여줌
+  });
+}
+function startTimer(){
+  roundEnding=false;
+  if(state && !state.tradedThisRound) state.tradedThisRound={};
+  roundStartAt=Date.now();
+  nextOfferAt=roundStartAt + (8+Math.random()*10)*1000;  // 첫 제안은 8~18초 뒤
+  initAiPace();
+  updateRoundProgress();
+  clearInterval(timer);
+  timer=setInterval(roundTick, 1000);
+}
+// 라운드마다 필요한 거래 수: 1라운드 1번, 2라운드 2번 … 5라운드부터는 계속 5번
+function requiredTrades(){ return Math.min((state && state.round) ? state.round : 1, 5); }
+function updateRoundProgress(){
+  if(!state) return;
+  if(!state.tradedThisRound) state.tradedThisRound={};
+  const req=requiredTrades();
+  const need=state.countries.length*req;
+  let done=0; state.countries.forEach(c=>{ done += Math.min(state.tradedThisRound[c.id]||0, req); });
+  const tl=document.getElementById('timeLeft'); if(tl) tl.textContent=done+' / '+need;
+  const bar=document.getElementById('timebar'); if(bar) bar.style.width=Math.round(done/Math.max(need,1)*100)+'%';
+  const rq=document.getElementById('roundReq'); if(rq) rq.textContent=req;
+}
+function updateTimer(){ updateRoundProgress(); }   // 기존 호출 호환용
+function allTraded(){ if(!state||!state.tradedThisRound) return false; const req=requiredTrades(); return state.countries.every(c=>(state.tradedThisRound[c.id]||0)>=req); }
+function markTraded(id){
+  if(!state) return;
+  if(!state.tradedThisRound) state.tradedThisRound={};
+  state.tradedThisRound[id]=(state.tradedThisRound[id]||0)+1;   // 이번 라운드 거래 횟수 +1
+  if(id!==myId){
+    const req=requiredTrades();
+    const othersDone=state.countries.every(c=>c.id===myId || (state.tradedThisRound[c.id]||0)>=req);
+    const meLeft=req-(state.tradedThisRound[myId]||0);
+    if(othersDone && meLeft>0) showToast(`이제 나만 ${meLeft}번 거래하면 라운드가 끝나요!`,'info');
+  }
+  updateRoundProgress();
+  checkRoundEnd();
+}
+function checkRoundEnd(){
+  if(state && !roundEnding && allTraded()){
+    roundEnding=true; clearInterval(timer);
+    showToast('모든 나라가 거래했어요! 라운드 정리 중…','good');
+    setTimeout(endRound, 800);
+  }
+}
+function feed(html){
+  const el=document.getElementById('tradeFeed'); if(!el) return;
+  const d=document.createElement('div'); d.className='tf'; d.innerHTML=html;
+  el.prepend(d);
+  while(el.children.length>3) el.removeChild(el.lastChild);
+}
+// 1초마다 점검: 각 나라는 '고민하는 시간'이 지난 뒤에야 거래함(사람 속도). 가끔 나에게 제안도 옴.
+function roundTick(){
+  if(!state || roundEnding) return;
+  const now=Date.now();
+  maybeIncomingOffer(now);
+  const req=requiredTrades();
+  state.countries.forEach(c=>{
+    if(c.id===myId || (state.tradedThisRound[c.id]||0)>=req) return;
+    if(now>=c._doneAt){ aiDoTrade(c); c._doneAt = now + (2.5+Math.random()*3.5)*1000; }  // 여러 번 거래: 다음 거래까지 잠깐 뒤
+    else if(now>=c._thinkAt){ aiThink(c); c._thinkAt = now + (0.12+Math.random()*0.13)*rsMs(); }
+  });
+  checkRoundEnd();
+}
+// 거래 전, 가격 비교·협상·재시도 같은 '생각하는 중' 모습을 보여줌
+function aiThink(c){
+  const msgs=[
+    `🤔 <b>${c.name}</b>이(가) 시장 가격을 비교하고 있어요…`,
+    `💬 <b>${c.name}</b>이(가) 다른 나라와 협상하는 중이에요…`,
+    `🔁 <b>${c.name}</b>이(가) 더 좋은 조건을 고민하고 있어요…`,
+    `🧐 <b>${c.name}</b>이(가) 무엇을 사고팔지 살펴보는 중…`
+  ];
+  feed(msgs[Math.floor(Math.random()*msgs.length)]);
+}
+// 다른 나라끼리(또는 시장과) 거래 — 보드에서 자원이 오가는 모습이 보여요
+function aiDoTrade(c){
+  const others=state.countries.filter(o=>o.id!==c.id && o.id!==myId);
+  const partner=others.length?others[Math.floor(Math.random()*others.length)]:null;
+  const giveK=RES_KEYS.slice().sort((a,b)=>c.res[b]-c.res[a])[0];
+  if(partner){
+    const getK=RES_KEYS.slice().sort((a,b)=>partner.res[b]-partner.res[a])[0];
+    const gq=Math.min(2,c.res[giveK]||0), tq=Math.min(2,partner.res[getK]||0);
+    if(gq>0 && tq>0 && giveK!==getK){
+      c.res[giveK]-=gq; partner.res[giveK]+=gq; partner.res[getK]-=tq; c.res[getK]+=tq;
+      feed(`${c.flag} <b>${c.name}</b> ↔ ${partner.flag} <b>${partner.name}</b> &nbsp; ${RES[giveK].icon}${gq} ↔ ${RES[getK].icon}${tq}`);
+      flyTiles(c.id, partner.id, RES[giveK].icon, RES[getK].icon);
+      markTraded(c.id); markTraded(partner.id); renderArena(); return;
+    }
+  }
+  if((c.res[giveK]||0)>0){ c.res[giveK]--; c.money+=RES[giveK].price; feed(`${c.flag} <b>${c.name}</b> → 🏪 시장에 ${RES[giveK].icon} 판매`); }
+  markTraded(c.id); renderArena();
+}
+function flyTiles(aid,bid,e1,e2){
+  const ae=document.getElementById('tile-'+aid), be=document.getElementById('tile-'+bid);
+  if(ae&&be){ flyBetween(ae,be,e1,0); flyBetween(be,ae,e2,140); }
+}
+// ---------- 나에게 들어오는 협상 제안 ----------
+function maybeIncomingOffer(now){
+  now = now || Date.now();
+  if(currentOffer) return;
+  if(document.querySelector('.modal-bg.show')) return;   // 다른 창이 열려 있으면 패스
+  if(now < nextOfferAt) return;                          // 제안은 너무 자주 오지 않게(쿨다운)
+  nextOfferAt = now + (12+Math.random()*12)*1000;        // 다음 제안까지 12~24초
+  if(Math.random()>0.7) return;
+  const me=getMe(); if(!me) return;
+  const cands=state.countries.filter(c=>c.id!==myId);
+  const from=cands[Math.floor(Math.random()*cands.length)]; if(!from) return;
+  const wantK=RES_KEYS.slice().sort((a,b)=>me.res[b]-me.res[a])[0];   // 내가 많이 가진 것(상대가 사고 싶어함)
+  if((me.res[wantK]||0)<2) return;
+  const giveK=RES_KEYS.slice().sort((a,b)=>from.res[b]-from.res[a])[0]; // 상대가 많이 가진 것
+  const wantVal=RES[wantK].price*2;
+  const offer={ fromId:from.id, wantK, wantQ:2, giveK:null, giveQ:0, money:0 };
+  // 상대는 내 남는 자원을 원함 → '시장에 파는 것보다 이득'이 되도록 값을 조금 더 얹어 제안한다.
+  if(giveK!==wantK && (from.res[giveK]||0)>0){
+    let q=Math.min(from.res[giveK], Math.ceil(wantVal*1.1/RES[giveK].price));  // want값의 110% 이상 되게
+    if(RES[giveK].price*q >= wantVal){ offer.giveK=giveK; offer.giveQ=q; }
+  }
+  if(!offer.giveK){ const m=Math.round(wantVal*1.15); if((from.money||0)<m) return; offer.money=m; }  // 돈이면 시장가보다 15% 더
+  currentOffer=offer; showOffer(offer, from);
+}
+function showOffer(offer, from){
+  document.getElementById('offerTitle').innerHTML=`${from.flag} ${from.name}의 제안!`;
+  const giveTxt=offer.giveK?`${RES[offer.giveK].icon} ${RES[offer.giveK].name} ${offer.giveQ}개`:`💰 ${offer.money}원`;
+  const wantTxt=`${RES[offer.wantK].icon} ${RES[offer.wantK].name} ${offer.wantQ}개`;
+  document.getElementById('offerBody').innerHTML=`<div class="big">${giveTxt}</div>를 줄 테니<br><div class="big">${wantTxt}</div>를 주세요.`;
+  document.getElementById('offerModal').classList.add('show');
+}
+function acceptOffer(){
+  if(!currentOffer) return closeOffer();
+  const o=currentOffer, me=getMe(), from=getCountry(o.fromId);
+  if(!from) return closeOffer();
+  if((me.res[o.wantK]||0)<o.wantQ){ showToast('줄 자원이 부족해요','bad'); return closeOffer(); }
+  me.res[o.wantK]-=o.wantQ; from.res[o.wantK]+=o.wantQ;
+  let getVal=0;
+  if(o.giveK){ from.res[o.giveK]-=o.giveQ; me.res[o.giveK]+=o.giveQ; getVal=RES[o.giveK].price*o.giveQ; }
+  else { from.money-=o.money; me.money+=o.money; getVal=o.money; }
+  me.income+=getVal; me.spending+=RES[o.wantK].price*o.wantQ; me.trades++;
+  if(from.mood!=null) from.mood=Math.min(100,from.mood+5);
+  feed(`${from.flag} <b>${from.name}</b> ↔ ${me.flag} <b>나</b> &nbsp; 제안 수락!`);
+  showToast(`✅ ${from.name}와(과) 무역했어요!`,'good');
+  log(`✅ <b>${from.name}</b>의 제안 수락`);
+  logActivity('무역', `${from.name}의 제안 수락`);
+  const fromId=from.id; closeOffer(); renderAll();
+  setTab('home'); requestAnimationFrame(()=>flyTiles(fromId, myId, o.giveK?RES[o.giveK].icon:'💰', RES[o.wantK].icon));
+  markTraded(myId); markTraded(fromId);
+}
+// 들어온 제안을 협상창으로 가져가 수량·태도를 바꿔 되제안(카운터오퍼)
+// 상대가 '먼저' 제안한 상황이므로, 내가 협상을 신청했을 때와 달리
+// 제목·안내·대화창을 "상대의 제안에 답하는" 맥락으로 바꿔 준다.
+function counterOffer(){
+  if(!currentOffer) return closeOffer();
+  const o=currentOffer, from=getCountry(o.fromId);
+  if(!from) return closeOffer();
+  closeOffer();            // 제안 창 닫기 (currentOffer 비워짐)
+  openNeg(o.fromId);       // 협상 창 열기 — negGive/negGet 0으로 초기화됨
+  // 상대가 원한 것 = 내가 줄 것,  상대가 준다던 것 = 내가 받을 것
+  negGive[o.wantK]=(negGive[o.wantK]||0)+o.wantQ;
+  if(o.giveK) negGet[o.giveK]=(negGet[o.giveK]||0)+o.giveQ;
+  else negMoneyGet=o.money;
+  renderNegLists();
+  // 역할을 바로잡기: 이건 '내가 거는 협상'이 아니라 '상대 제안에 답하기'
+  const who = from.player ? `${from.flag} ${from.name}(${esc(from.player)})` : `${from.flag} ${from.name}`;
+  document.getElementById('negTitle').textContent=`🤝 ${who}의 제안에 답하기`;
+  document.getElementById('negHint').textContent='상대가 먼저 제안했어요. 그대로 두고 태도를 골라 답하거나, 수량을 바꿔 되제안할 수 있어요.';
+  const giveTxt=o.giveK?`${RES[o.giveK].icon} ${RES[o.giveK].name} ${o.giveQ}개`:`💰 ${o.money}원`;
+  const wantTxt=`${RES[o.wantK].icon} ${RES[o.wantK].name} ${o.wantQ}개`;
+  negReact('mid', `<span class="who">${from.name}${from.player?'('+esc(from.player)+')':''}</span>: “${giveTxt}를 줄 테니 ${wantTxt}를 주세요.” 라고 제안했어요.<br><span class="note">이대로 태도를 골라 답하거나, 수량을 바꿔 되제안해 보세요.</span>`);
+}
+function declineOffer(){
+  if(currentOffer){ const from=getCountry(currentOffer.fromId); if(from && from.mood!=null) from.mood=Math.max(0,from.mood-3); }
+  showToast('제안을 거절했어요','info'); closeOffer();
+}
+function closeOffer(){ currentOffer=null; document.getElementById('offerModal').classList.remove('show'); }
+
+// 한 라운드 마감 → 변동사항 요약을 보여줌
+function endRound(){
+  clearInterval(timer); roundEnding=true; currentOffer=null;
+  ['negModal','offerModal','mktModal'].forEach(id=>{ var el=document.getElementById(id); if(el) el.classList.remove('show'); });
+  state.countries.forEach(c=>{ if(c.isAI) aiTurn(c); });
+  state.countries.forEach(c=>{ Object.entries(c.regen).forEach(([k,n])=>c.res[k]+=n); });
+  renderAll();
+  openRoundSummary();
+}
+function openRoundSummary(){
+  const ranked=[...state.countries].map(c=>({c,score:scoreOf(c)})).sort((a,b)=>b.score-a.score);
+  const kingId=ranked[0].c.id;
+  document.getElementById('roundSumTitle').textContent=`📊 ${state.round}라운드 결과`;
+  document.getElementById('roundSumList').innerHTML = ranked.map((r,i)=>{
+    const c=r.c, ds=r.score-c._prevScore;
+    const dCls = ds>0?'up':ds<0?'down':'flat'; const arr = ds>0?'▲':ds<0?'▼':'–';
+    const name = c.id===myId?`${c.name} <small>(나)</small>`:`${c.name}${c.player?` <small>${esc(c.player)}</small>`:''}`;
+    return `<div class="sum-row pop ${c.id===kingId?'king':''} ${c.id===myId?'me':''}" style="animation-delay:${i*0.07}s">
+      <span class="sum-flag">${c.id===kingId?'👑':c.flag}</span>
+      <span class="sum-name">${name}</span>
+      <span class="delta ${dCls}">${arr} ${ds>0?'+':''}${ds}</span>
+      <span class="sum-score">${r.score}</span></div>`;
+  }).join('');
+  const kingC=ranked[0].c;
+  document.getElementById('roundSumHint').innerHTML = `현재 <b style="color:var(--gold)">👑 무역왕</b>은 <b>${kingC.id===myId?'나':kingC.name+(kingC.player?'('+esc(kingC.player)+')':'')}</b> — 수익을 잘 내고 잘 쓴 나라예요! (점수 = 돈 + 자원·제품 가치)`;
+  const btn=document.getElementById('roundSumBtn');
+  if(state.round>=FINAL_ROUND){ btn.textContent='🏆 세계 무역왕 발표 보기'; }
+  else if(CHECKPOINTS.indexOf(state.round)>=0){ btn.textContent='계속할지 정하기 ▶'; }
+  else { btn.textContent='다음 라운드 ▶'; }
+  document.getElementById('roundModal').classList.add('show');
+}
+function afterSummary(){
+  document.getElementById('roundModal').classList.remove('show');
+  if(state.round>=FINAL_ROUND) return endGame();
+  if(CHECKPOINTS.indexOf(state.round)>=0) return openContinuePrompt();
+  advanceRound();
+}
+function advanceRound(){
+  state.round++;
+  state.tradedThisRound={};            // 새 라운드: 거래 현황 초기화
+  state.countries.forEach(c=>{ c._prevScore=scoreOf(c); c._prevMoney=c.money; });
+  const rn=document.getElementById('roundNow'); rn.textContent=state.round; rn.classList.add('pulse'); setTimeout(()=>rn.classList.remove('pulse'),400);
+  log(`⏭️ <b>라운드 ${state.round}</b> 시작! 각 나라가 특산 자원을 생산했어요.`);
+  var tf=document.getElementById('tradeFeed'); if(tf) tf.innerHTML='';
+  renderAll(); startTimer();
+}
+function openContinuePrompt(){
+  const next = state.round===5?'8':'10';
+  document.getElementById('contTitle').textContent=`${state.round}라운드 끝!`;
+  document.getElementById('contMsg').innerHTML=`여기까지 해도 좋고, <b>${next}라운드</b>까지 더 이어가도 좋아요. 어떻게 할까요?`;
+  document.getElementById('contModal').classList.add('show');
+}
+function continueMore(){ document.getElementById('contModal').classList.remove('show'); advanceRound(); }
+function stopNow(){ document.getElementById('contModal').classList.remove('show'); endedEarly=true; endGame(); }
+
+function aiTurn(c){
+  let made=true;
+  while(made){ made=false; for(const k of PROD_KEYS){ const p=PRODUCTS[k]; if(Object.entries(p.recipe).every(([rk,n])=>c.res[rk]>=n)){ Object.entries(p.recipe).forEach(([rk,n])=>c.res[rk]-=n); c.prod[k]++; made=true; } } }
+  RES_KEYS.forEach(k=>{ if(c.res[k]>6){ const s=c.res[k]-6; c.res[k]-=s; c.money+=s*RES[k].price; } });
+  for(const k of PROD_KEYS){ const p=PRODUCTS[k]; for(const [rk,n] of Object.entries(p.recipe)) if(c.res[rk]<n && c.money>RES[rk].price*2){ c.money-=RES[rk].price; c.res[rk]++; } }
+  PROD_KEYS.forEach(k=>{ if(c.prod[k]>2){ const s=c.prod[k]-2; c.prod[k]-=s; c.money+=s*PRODUCTS[k].price; } });
+}
+
+// ---------- 결과 발표 ----------
+function endGame(){
+  clearInterval(timer);
+  gameDone=true; clearSavedGame();   // 한 판을 끝까지 마쳤으니 이 기기의 저장을 비움(다음엔 처음부터)
+  // 협상·시장·라운드 요약 등 열려 있는 모든 창을 닫고 종료 화면만 보이게 함
+  document.querySelectorAll('.modal-bg.show').forEach(function(m){ m.classList.remove('show'); });
+  ['startScreen','onboardScreen','countryScreen'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('hide'); });
+  const ranked=state.countries.map(c=>({c,score:scoreOf(c)})).sort((a,b)=>b.score-a.score);
+  const me=getMe(), myScore=scoreOf(me), myRank=ranked.findIndex(r=>r.c.id===myId)+1;
+  const king=ranked[0].c, iAmKing=king.id===myId;
+  const medals=['🥇','🥈','🥉'];
+  const rankHtml = ranked.map((r,i)=>`<div class="rank-row ${r.c.id===king.id?'':''}"><span class="pos">${medals[i]||(i+1)}</span><span style="font-size:24px">${r.c.id===king.id?'👑':r.c.flag}</span><span style="flex:1;font-weight:700;text-align:left">${r.c.name}${r.c.player?` · ${esc(r.c.player)}`:''} ${r.c.id===myId?'<b style="color:var(--accent)">(나)</b>':''}</span><span style="color:var(--gold);font-weight:800">${r.score}</span></div>`).join('');
+
+  let head;
+  if(iAmKing){
+    head = `<div class="king-card">
+      <div class="king-trophy">🏆</div>
+      <div class="king-title">세계 무역왕!</div>
+      <p class="big" style="margin:4px 0">${esc(chosenName||me.name)} 님, 축하해요! 최종 점수 <b style="color:var(--gold)">${myScore}</b></p>
+      <button class="good" style="margin-top:8px" onclick="downloadBadge()">🎖️ 무역왕 뱃지 받기</button>
+    </div>`;
+  } else {
+    head = `<h1>🏁 게임 종료!</h1><p class="note big">${esc(chosenName||me.name)} 님은 <b>${myRank}등</b> · 점수 <b style="color:var(--gold)">${myScore}</b></p>
+      <p class="note">👑 세계 무역왕은 <b>${king.name}${king.player?'('+esc(king.player)+')':''}</b> (점수 ${ranked[0].score})</p>`;
+  }
+
+  const net=me.income-me.spending;
+  const ledger = `<div class="ledger">
+    <div class="inc"><div class="note">총 수익</div><div class="lv">+${me.income}</div></div>
+    <div class="exp"><div class="note">총 지출</div><div class="lv">−${me.spending}</div></div>
+    <div class="net"><div class="note">차액</div><div class="lv">${net>=0?'+':''}${net}</div></div></div>`;
+
+  const advice = iAmKing ? '' : `<div class="advice"><h4>💡 다음엔 이렇게 해봐요</h4>${buildAdvice(me,net,myRank,ranked.length).map(t=>`<div class="tip"><span>${t.i}</span><span>${t.t}</span></div>`).join('')}</div>`;
+
+  document.getElementById('endBox').innerHTML = `${head}${ledger}${advice}
+    <div style="margin:14px 0">${rankHtml}</div>
+    <button class="good" onclick="openOnboard('endquiz')" style="margin-top:6px; width:100%">📝 용어 퀴즈 풀기</button>
+    <button onclick="location.reload()" style="margin-top:8px">🔄 다시 하기</button>`;
+
+  logActivity('종료', `${iAmKing?'🏆 세계 무역왕! ':''}${myRank}등으로 종료`, myScore, myRank);
+  document.getElementById('game').classList.add('hide');
+  document.getElementById('endScreen').classList.remove('hide');
+  if(iAmKing) launchFireworks(6500);
+}
+
+// 수익·지출·행동을 보고 맞춤 조언 생성
+function buildAdvice(me,net,rank,total){
+  const tips=[];
+  if(net<0) tips.push({i:'💸',t:`<b>지출(${me.spending})이 수익(${me.income})보다 많았어요.</b> 시장에서 비싸게 사기보다, 내 특산 자원으로 <b>제품을 만들어 팔면</b> 더 남아요.`});
+  else tips.push({i:'👍',t:`수익이 지출보다 많았어요(차액 ${net}). 좋은 흐름이에요. 더 비싼 제품에 도전해 점수를 키워봐요.`});
+  if(me.trades===0) tips.push({i:'🤝',t:`이번엔 <b>협상을 한 번도 안 했어요.</b> 다른 나라와 무역하면 혼자 못 만드는 제품 재료를 구할 수 있어요. 정중히·설득하기부터 시도해 봐요.`});
+  else if(me.trades<3) tips.push({i:'🤝',t:`협상을 ${me.trades}번 했어요. 무역을 <b>더 자주</b> 하면 부족한 자원을 싸게 모을 수 있어요.`});
+  if(me.made<3) tips.push({i:'🛠️',t:`제품을 ${me.made}개 만들었어요. <b>스마트폰·소프트웨어(💰95)</b> 같은 비싼 제품을 만들수록 점수가 쑥 올라가요.`});
+  if(rank>Math.ceil(total/2)) tips.push({i:'⏱️',t:`라운드마다 <b>특산 자원이 새로 생겨요.</b> 그걸 모았다가 제품으로 바꾸면 후반에 점수가 크게 벌어져요.`});
+  tips.push({i:'⭐',t:`핵심은 <b>싸게 모아 → 만들어 → 비싸게</b>! 그리고 사이가 좋을수록 협상이 잘 통해요.`});
+  return tips.slice(0,4);
+}
+
+// ---------- 폭죽 ----------
+function launchFireworks(ms){
+  const cv=document.getElementById('fireworks'); cv.style.display='block';
+  const ctx=cv.getContext('2d'); function size(){ cv.width=innerWidth; cv.height=innerHeight; } size(); addEventListener('resize',size);
+  const parts=[], colors=['#f5c542','#4f9cf9','#36c275','#e3585f','#b39ce8','#ffffff'];
+  function burst(){ const x=Math.random()*cv.width, y=Math.random()*cv.height*0.6+40, col=colors[Math.floor(Math.random()*colors.length)], n=46+Math.random()*30;
+    for(let i=0;i<n;i++){ const a=Math.PI*2*i/n, sp=2+Math.random()*5.5; parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,col}); } }
+  let last=0, t0=performance.now();
+  (function loop(now){ ctx.clearRect(0,0,cv.width,cv.height);
+    if(now-last>320){ burst(); if(Math.random()<0.5) burst(); last=now; }
+    parts.forEach(p=>{ p.vy+=0.045; p.x+=p.vx; p.y+=p.vy; p.life-=0.012; ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(p.x,p.y,3.2,0,7); ctx.fill(); });
+    for(let i=parts.length-1;i>=0;i--) if(parts[i].life<=0) parts.splice(i,1);
+    if(now-t0<ms || parts.length){ requestAnimationFrame(loop); } else { ctx.clearRect(0,0,cv.width,cv.height); cv.style.display='none'; }
+  })(performance.now());
+}
+
+// ---------- 무역왕 뱃지 다운로드 ----------
+function downloadBadge(){
+  const S=900, cv=document.createElement('canvas'); cv.width=S; cv.height=S; const x=cv.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,S); g.addColorStop(0,'#1c3458'); g.addColorStop(1,'#0e1a2b'); x.fillStyle=g; x.fillRect(0,0,S,S);
+  x.strokeStyle='#f5c542'; x.lineWidth=14; x.beginPath(); x.arc(S/2,S/2,S/2-30,0,7); x.stroke();
+  x.strokeStyle='rgba(245,197,66,.4)'; x.lineWidth=4; x.beginPath(); x.arc(S/2,S/2,S/2-58,0,7); x.stroke();
+  x.textAlign='center'; x.textBaseline='middle';
+  x.font='200px serif'; x.fillText('🏆',S/2,S/2-150);
+  x.fillStyle='#f5c542'; x.font='900 92px sans-serif'; x.fillText('세계 무역왕',S/2,S/2+70);
+  x.fillStyle='#eaf1fb'; x.font='800 60px sans-serif'; x.fillText(String(chosenName||getMe().name),S/2,S/2+185);
+  x.fillStyle='#9db4d6'; x.font='44px sans-serif';
+  const d=new Date(); x.fillText(`점수 ${scoreOf(getMe())} · ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`,S/2,S/2+275);
+  const a=document.createElement('a'); a.download='무역왕_뱃지.png'; a.href=cv.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove();
+  showToast('🎖️ 뱃지를 저장했어요!','good');
+}
+
+// ---------- 토스트/로그 ----------
+let toastTimer=null;
+function showToast(msg,type){ const el=document.getElementById('toast'); el.className=type||'info'; el.innerHTML=msg; void el.offsetWidth; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2000); }
+function toast(msg){ showToast(`⚠️ ${msg}`,'info'); log(`⚠️ ${msg}`); }
+function log(msg){ const el=document.getElementById('log'); if(!el) return; const d=document.createElement('div'); d.style.cssText='padding:6px 0;border-bottom:1px dashed var(--line);color:var(--muted);font-size:14px'; d.innerHTML=`<span class="note">R${state?state.round:1}</span> ${msg}`; el.prepend(d); }
+
+// ====== 수업 연결 (선생님 시트와 안전하게 주고받기) ======
+const ENDPOINT_KEY='trade_class_endpoint';
+const APP_ID='woodangtang-trade';                 // 이 기기에 저장할 때 쓰는 앱 구분 이름
+let endpoint=''; try{ endpoint = localStorage.getItem(ENDPOINT_KEY) || ''; }catch(e){ endpoint=''; }
+// 이 화면이 Apps Script 웹앱 '안에서' 직접 열렸는지 (앱스스크립트 단독 배포).
+// 이 경우 주소를 붙여넣지 않아도 자기 시트에 자동으로 연결된다.
+const IS_APPS_SCRIPT = (typeof google !== 'undefined') && !!(google.script && google.script.run);
+function appShareUrl(){ return (typeof window!=='undefined' && window.__APP_URL__) ? window.__APP_URL__ : ''; }
+let demoMode=false, enteredByLink=false, gameDone=false, pendingResume=false, _saveTimer=null;
+// 학생 공유 링크(.../#c=주소)로 들어오면 그 주소로 자동 연결
+try{
+  var _m=(location.hash||'').match(/[#&]c=([^&]+)/);
+  if(_m && _m[1]){ endpoint=decodeURIComponent(_m[1]); enteredByLink=true; try{ localStorage.setItem(ENDPOINT_KEY, endpoint); }catch(e){} }
+}catch(e){}
+let classInfo = { className:'', loaded:false };
+let chosenName = '';
+let rosterAvailable=false, nameChosen=false;
+
+// 서버와 주고받기 — 두 가지 배포 방식을 모두 지원한다.
+//  ① 앱스스크립트 단독 배포: 이 화면이 웹앱 안에서 열렸으므로 google.script.run 으로 자기 시트를 직접 호출
+//  ② 외부(정적) 호스팅: 선생님이 붙여넣은 주소로 <script> 태그(콜백) 요청
+function callServer(params, timeoutMs){
+  if(IS_APPS_SCRIPT){
+    return new Promise((resolve,reject)=>{
+      google.script.run
+        .withSuccessHandler(function(data){ resolve(data); })
+        .withFailureHandler(function(err){ reject(err||new Error('rpc')); })
+        .rpc(params);
+    });
+  }
+  return new Promise((resolve,reject)=>{
+    if(!endpoint) return reject(new Error('no-endpoint'));
+    const cb='_tg'+Date.now()+Math.floor(Math.random()*1e4);
+    const qs=Object.keys(params).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
+    const s=document.createElement('script');
+    let done=false;
+    const t=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } }, timeoutMs||12000);
+    function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.remove(); clearTimeout(t); }
+    window[cb]=(data)=>{ done=true; cleanup(); resolve(data); };
+    s.onerror=()=>{ if(!done){ cleanup(); reject(new Error('network')); } };
+    s.src=endpoint+(endpoint.indexOf('?')>=0?'&':'?')+qs+'&callback='+cb;
+    document.head.appendChild(s);
+  });
+}
+const api = {
+  ping:    ()=>callServer({action:'ping'}, 12000),
+  roster:  ()=>callServer({action:'roster'}, 12000),
+  settings:()=>callServer({action:'settings'}, 12000),
+  teams:   ()=>callServer({action:'teams'}, 12000),
+  log:(rec)=>callServer(Object.assign({action:'log'}, rec), 9000),
+};
+
+// 연결되어 있고 이름을 골랐을 때만 기록을 보냄 (실패해도 게임엔 영향 없음)
+function logActivity(kind, detail, score, rank){
+  if((!endpoint && !IS_APPS_SCRIPT) || !chosenName) return;
+  const rec={ name:chosenName, kind:kind||'', detail:detail||'' };
+  if(score!=null) rec.score=score;
+  if(rank!=null) rec.rank=rank;
+  api.log(rec).catch(()=>{});
+}
+
+// ====== 체험(데모) 모드 · 이 기기에 저장하고 이어하기 ======
+// 시트에 연결되지 않았을 때는 학생1~학생30으로 바로 체험할 수 있고,
+// 진행은 이 기기에만 저장됩니다. 한 판(끝까지)을 마치면 저장을 비웁니다.
+function saveKey(name){ return 'progress:'+APP_ID+':'+name; }
+function snapshotGame(){ return JSON.stringify({ v:1, round:state.round, myId:myId, chosenName:chosenName, countries:state.countries, tradedThisRound:state.tradedThisRound||{} }); }
+function scheduleSave(){ if(!demoMode || !state || gameDone || !chosenName) return; clearTimeout(_saveTimer); _saveTimer=setTimeout(saveGame,600); }
+function saveGame(){ if(!demoMode || !state || gameDone || !chosenName) return; try{ localStorage.setItem(saveKey(chosenName), snapshotGame()); }catch(e){} }
+function loadSaved(name){ try{ var raw=localStorage.getItem(saveKey(name)); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function hasSavedGame(name){ var s=loadSaved(name); return !!(s && s.countries && s.countries.length); }
+function clearSavedGame(){ if(!chosenName) return; try{ localStorage.removeItem(saveKey(chosenName)); }catch(e){} }
+function restartFresh(ev){ if(ev) ev.preventDefault(); if(chosenName){ try{ localStorage.removeItem(saveKey(chosenName)); }catch(e){} } pendingResume=false; updateEnterGate(); }
+
+function startDemoMode(){
+  demoMode=true;
+  classInfo={ className:'체험', loaded:true };
+  var list=[]; for(var i=1;i<=30;i++) list.push({ name:'학생'+i });  // 체험 모드에선 번호 없이 이름만
+  renderConnBanner('demo');
+  renderNamePick(list);
+}
+
+function resumeSavedGame(name){
+  var snap=loadSaved(name); if(!snap || !snap.countries){ openOnboard('learn'); return; }
+  chosenName=name; state={ round:snap.round, countries:snap.countries, tradedThisRound:snap.tradedThisRound||{} }; myId=snap.myId; gameDone=false;
+  document.getElementById('countryScreen').classList.add('hide');
+  document.getElementById('startScreen').classList.add('hide');
+  document.getElementById('onboardScreen').classList.add('hide');
+  document.getElementById('game').classList.remove('hide');
+  document.getElementById('roundMax').textContent=FINAL_ROUND;
+  var me=getMe();
+  document.getElementById('hudFlag').textContent=me.flag;
+  document.getElementById('hudName').textContent=me.name;
+  document.getElementById('roundNow').textContent=state.round;
+  setTab('home'); log('이어서 시작합니다. (라운드 '+state.round+')');
+  renderAll(); startTimer();
+}
+
+function applySettings(s){
+  if(!s) return;
+  if(s.rounds)     MAX_ROUND=s.rounds;
+  if(s.seconds)    ROUND_SECONDS=s.seconds;
+  if(s.startMoney) START_MONEY=s.startMoney;
+  classInfo.className=s.className||'';
+  const rm=document.getElementById('roundMax'); if(rm) rm.textContent=MAX_ROUND;
+}
+
+async function initConnection(){
+  // 외부 호스팅인데 연결 주소가 없으면 체험 모드. (앱스스크립트 단독 배포는 자기 시트에 바로 연결)
+  if(!endpoint && !IS_APPS_SCRIPT){ startDemoMode(); return; }
+  renderConnBanner('loading');
+  try{
+    const p=await api.ping();
+    if(!p || !p.ok) throw new Error('bad');
+    const results=await Promise.all([ api.settings().catch(()=>null), api.roster().catch(()=>null), api.teams().catch(()=>null) ]);
+    if(results[0]) applySettings(results[0]);
+    classInfo.loaded=true;
+    teamsData = (results[2] && results[2].teams && results[2].teams.length) ? results[2].teams : null;
+    renderConnBanner('on');
+    renderNamePick(results[1] && results[1].students ? results[1].students : []);
+  }catch(e){
+    renderConnBanner('error');
+  }
+}
+
+function renderConnBanner(stateName){
+  const el=document.getElementById('connBanner');
+  if(el){
+    if(stateName==='on'){ const cn=classInfo.className?('“'+classInfo.className+'”'):'우리 반'; el.textContent='✅ '+cn+' 연결됨'; el.style.color='#2e9b63'; }
+    else if(stateName==='loading'){ el.textContent='⏳ 연결을 확인하는 중…'; el.style.color='#6b7280'; }
+    else if(stateName==='error'){ el.textContent='⚠️ 연결 실패 — ⚙️ 선생님 메뉴에서 주소를 확인하세요'; el.style.color='#d4564f'; }
+    else if(stateName==='demo'){ el.textContent='🎮 체험 모드'; el.style.color='#7c6df2'; }
+    else { el.textContent='🔌 아직 연결되지 않았어요 — ⚙️ 선생님 메뉴에서 연결하세요'; el.style.color='#6b7280'; }
+  }
+  if(stateName!=='on' && stateName!=='demo'){ rosterAvailable=false; nameChosen=false; }
+  updateEnterGate();
+}
+
+function renderNamePick(students){
+  const sel=document.getElementById('namePick'); if(!sel) return;
+  if(!students || !students.length){ rosterAvailable=false; nameChosen=false; updateEnterGate(); return; }
+  rosterAvailable=true; nameChosen=false;
+  const esc=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  // 선생님이 제공한 명단의 이름만 — 목록에 없는 학생은 참여할 수 없음(임의 입력/혼자 연습 항목 없음)
+  sel.innerHTML='<option value="">선택하세요</option>'+
+    students.map(s=>`<option value="${esc(s.name)}">${s.no?(s.no+'. '):''}${esc(s.name)}</option>`).join('');
+  sel.value='';
+  updateEnterGate();
+}
+function onNamePick(v){
+  if(!v){ nameChosen=false; chosenName=''; pendingResume=false; }
+  else {
+    nameChosen=true; chosenName=v;
+    // 체험 모드: 이전에 저장된 진행이 있어도 조용히 지우고 항상 처음부터 시작한다.
+    // (구글 시트가 연결된 경우의 이어하기는 서버 쪽에서 처리되므로 여기와 무관하다.)
+    if(demoMode){ try{ localStorage.removeItem(saveKey(v)); }catch(e){} }
+    pendingResume=false;
+  }
+  updateEnterGate();
+}
+// 입장 관문: 수업에 연결되고(명단 로드), 명단에서 내 이름을 골라야만 입장 가능
+function updateEnterGate(){
+  const btn=document.getElementById('enterBtn'), hint=document.getElementById('nameHint'), sel=document.getElementById('namePick');
+  if(!classInfo.loaded){
+    if(sel) sel.disabled=true;
+    if(btn) btn.disabled=true;
+    if(hint) hint.textContent = (endpoint||IS_APPS_SCRIPT) ? '연결을 확인하는 중…' : '먼저 ⚙️ 선생님 메뉴에서 수업에 연결해 주세요.';
+    return;
+  }
+  if(!rosterAvailable){
+    if(sel) sel.disabled=true;
+    if(btn) btn.disabled=true;
+    if(hint) hint.textContent='명단이 아직 비어 있어요. 선생님께 알려 주세요.';
+    return;
+  }
+  if(sel) sel.disabled=false;
+  if(btn) btn.disabled = !nameChosen;
+  if(btn) btn.textContent = (nameChosen && pendingResume) ? '이어서 하기 ▶' : '시작하기!';
+  if(hint){
+    if(!nameChosen) hint.textContent='명단에서 내 이름을 선택하세요.';
+    else if(pendingResume) hint.innerHTML = `${esc(chosenName)} — 이전에 하던 게임이 있어요. <a href="#" onclick="restartFresh(event)" style="color:#d4564f">처음부터</a>`;
+    else hint.textContent = `${chosenName} (으)로 시작해요!`;
+  }
+}
+function enterGame(){
+  if(!classInfo.loaded || !rosterAvailable || !nameChosen){ updateEnterGate(); return; }
+  if(demoMode && pendingResume){ resumeSavedGame(chosenName); return; }
+  openOnboard('learn');
+}
+
+// ⚙️ 설정 모달
+function openSettings(){
+  var asMode=IS_APPS_SCRIPT;
+  // 앱스스크립트 단독 배포에서는 주소 붙여넣기가 필요 없으므로 관련 UI를 감춘다.
+  document.getElementById('setNoteConnect').style.display   = asMode?'none':'';
+  document.getElementById('setNoteAppsScript').style.display= asMode?'':'none';
+  document.getElementById('setEndpoint').style.display      = asMode?'none':'';
+  document.getElementById('btnConnect').style.display       = asMode?'none':'';
+  document.getElementById('btnDisconnect').style.display    = asMode?'none':'';
+  if(!asMode){ document.getElementById('setEndpoint').value=endpoint||''; setStatus(endpoint?'저장된 연결 주소가 있어요.':'', ''); }
+  else setStatus('', '');
+  refreshShareLink();
+  document.getElementById('setModal').classList.add('show');
+}
+// 외부 호스팅 학생 링크 = 현재 앱 주소(해시 제외) + #c=선생님주소
+function studentLink(){
+  var base=location.origin+location.pathname+location.search;
+  return base+'#c='+encodeURIComponent(endpoint);
+}
+function refreshShareLink(){
+  var wrap=document.getElementById('shareWrap'), inp=document.getElementById('shareLink');
+  if(!wrap||!inp) return;
+  if(IS_APPS_SCRIPT){                                   // 단독 배포: 지금 이 웹앱 주소를 그대로 공유
+    var u=appShareUrl();
+    if(u){ inp.value=u; wrap.classList.remove('hide'); } else { inp.value=''; wrap.classList.add('hide'); }
+    return;
+  }
+  if(endpoint && classInfo.loaded){ inp.value=studentLink(); wrap.classList.remove('hide'); }
+  else { inp.value=''; wrap.classList.add('hide'); }
+}
+function copyShareLink(){
+  var inp=document.getElementById('shareLink'); if(!inp||!inp.value) return;
+  var ok=function(){ setStatus('✅ 학생 링크를 복사했어요! 학생들에게 공유하세요.','ok'); };
+  var fallback=function(){ try{ inp.focus(); inp.select(); document.execCommand && document.execCommand('copy'); ok(); }catch(e){ setStatus('위 주소를 길게 눌러 복사하세요.',''); } };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(ok, fallback); }
+    else fallback();
+  }catch(e){ fallback(); }
+}
+function closeSettings(){ document.getElementById('setModal').classList.remove('show'); }
+function setStatus(msg,type){ const el=document.getElementById('setStatus'); el.textContent=msg||''; el.className='set-status '+(type||''); }
+
+async function saveConnection(){
+  const url=(document.getElementById('setEndpoint').value||'').trim();
+  if(!url){ setStatus('연결 주소를 붙여넣어 주세요.','warn'); return; }
+  const prev=endpoint; endpoint=url;
+  setStatus('연결을 확인하는 중…','');
+  try{
+    const p=await api.ping();
+    if(!p || !p.ok) throw new Error('bad');
+    try{ localStorage.setItem(ENDPOINT_KEY, endpoint); }catch(e){}
+    setStatus('✅ 연결됐어요! 아래 ‘학생 공유 링크’를 복사해 학생들에게 주세요.','ok');
+    await initConnection();
+    refreshShareLink();
+  }catch(e){
+    endpoint=prev;
+    setStatus('⚠️ 연결하지 못했어요. 주소를 다시 확인해 주세요.','warn');
+  }
+}
+function disconnectConnection(){
+  endpoint=''; chosenName=''; classInfo={className:'',loaded:false};
+  try{ localStorage.removeItem(ENDPOINT_KEY); }catch(e){}
+  const f=document.getElementById('setEndpoint'); if(f) f.value='';
+  setStatus('연결을 끊었어요. 이제 체험 모드로 돌아가요.','');
+  startDemoMode();          // 연결을 끊으면 다시 체험 모드(학생1~30)로
+  refreshShareLink();
+}
+
+// 학생 공유 링크(.../#c=주소)로 들어온 학생 화면에는 ⚙️ 선생님 메뉴를 보이지 않음
+if(enteredByLink){ var _tl=document.querySelector('.teacher-link'); if(_tl) _tl.remove(); }
+initConnection();
+document.getElementById('tabbar').addEventListener('click',e=>{ const b=e.target.closest('button[data-go]'); if(!b) return; if(b.dataset.go==='market') openMarket(); else setTab(b.dataset.go); });
+</script>
+</body>
+</html>
